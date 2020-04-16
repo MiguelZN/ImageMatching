@@ -19,6 +19,7 @@ import tkinter
 from tkinter import filedialog
 
 
+
 IMAGEDIR = './input_images/'
 
 
@@ -129,23 +130,77 @@ def getUserInputDimension():
     except:
         print("Error! Inputted Dimension was not in the form: '<width>x<height>'")
 
+def getIndexesForElement(array,element):
+    indexes = np.where(array == element)
+    points = list(zip(indexes[1], indexes[0]))
+    return points
+
+#More efficient SAD using numpy
+def SAD2(I,T):
+    template_height = T.shape[1]
+    template_width = T.shape[0]
+
+    if (isinstance(I[0][0], np.ndarray) or isinstance(I[0][0], list)):
+        isColorImage = True
+        print("THIS IS A COLOR IMAGE")
+
+
+    else:
+        isColorImage = False
+        print("THIS IS A GRAYSCALE IMAGE")
+        currentTemplateLayedOverImage =np.lib.stride_tricks.as_strided(I,shape=(I.shape[0]-template_height+1,I.shape[1]-template_width+1,template_height,template_width),strides=I.strides*2)
+        foundSADValues = abs(currentTemplateLayedOverImage-T).sum(axis=-1).sum(axis=-1)
+        return foundSADValues
+
+    return I
+
+def drawRectangleOnImage(I,topLeftPoint,dimension):
+    print(I)
+    print(topLeftPoint)
+    print(dimension)
+
+    I = cv2.rectangle(I,topLeftPoint,dimension,(255,0,0),2)
+    return I
+
+def drawRectangleOnImageGivenTemplate(I,topLeftPoint,template):
+    I=drawRectangleOnImage(I,topLeftPoint,(topLeftPoint[0]+template.shape[1],topLeftPoint[1]+template.shape[0]))
+    return I
+
+def SSD(I,T):
+    template_height = T.shape[1]
+    template_width = T.shape[0]
+
+    view =np.lib.stride_tricks.as_strided(I,shape=(I.shape[0]-template_height+1,I.shape[1]-template_width+1,template_height,template_width),strides=I.strides*2)
+    ssd = ((view-T)*(view-T)).sum(axis=-1).sum(axis=-1)
+    print(ssd)
+    return ssd
+
+def SAD2(I,T):
+    template_height = T.shape[1]
+    template_width = T.shape[0]
+
+    view =np.lib.stride_tricks.as_strided(I,shape=(I.shape[0]-template_height+1,I.shape[1]-template_width+1,template_height,template_width),strides=I.strides*2)
+    ssd = abs(view-T).sum(axis=-1).sum(axis=-1)
+    print(ssd)
+    return ssd
+
+
+#Less efficient SAD
 def SAD(I,T):
     newimage = np.copy(I)
-    isColorImage = False
+    isColorImage = None
 
     imagedimensions = newimage.shape
     image_height = imagedimensions[0]
     image_width = imagedimensions[1]
 
-    print(I[0][0])
 
-
-    if(isinstance(I[0][0],np.uint8) or isinstance(I[0][0],int)):
-        isColorImage = False
-        print("THIS IS A GRAYSCALE IMAGE")
+    if(isinstance(I[0][0],np.ndarray) or isinstance(I[0][0],list)):
+        isColorImage = True
+        print("THIS IS A COLOR IMAGE")
     else:
         isColorImage = False
-        print("THIS IS A COLOR IMAGE")
+        print("THIS IS A GRAYSCALE IMAGE")
 
 
     centerOfKernel = -1
@@ -158,11 +213,13 @@ def SAD(I,T):
     middleColumn = math.floor(template_width/2)
     kernelTotal = np.sum(a=T)
 
-    if(middleRow==middleColumn):
-        centerOfKernel = middleColumn
-    else:
-        raise Exception('The kernel is not a perfect square! ERROR')
-        return None
+    print("SHAPE OF TEMPLATE:"+str(T.shape))
+
+    # if(middleRow==middleColumn):
+    #     centerOfKernel = middleColumn
+    # else:
+    #     raise Exception('The kernel is not a perfect square! ERROR')
+    #     return None
 
     #Template Matching:
     POSITIVE_INFINTY = float('inf')
@@ -206,13 +263,16 @@ def SAD(I,T):
 
             #print(I.shape[1],I.shape[0])
             if(rowStart>=0 and rowEnd<=I.shape[0] and columnStart>=0 and columnEnd<=I.shape[1]):
-                print("ENTERED FSDFDS")
+                #print("ENTERED FSDFDS")
                 for kernel_row_index in range(0,template_height):
 
 
                     for kernel_column_index in range(0,template_width):
-                        currentTemplateValue = T.item((kernel_row_index,kernel_column_index))
-
+                        if(isColorImage==False):
+                            currentTemplateValue = T.item((kernel_row_index,kernel_column_index))
+                        else:
+                            currentTemplateValue = T[kernel_row_index][kernel_column_index]
+                            #print(currentTemplateValue)
 
                         #CV2 Uses BGR array layout for colors
                         currentBluePixelValue = 0
@@ -231,23 +291,23 @@ def SAD(I,T):
                             #currentIntensityPixelValue = I[currentRowKernelLinedAgainstImage][currentColumnKernelLinedAgainstImage]
 
                             if(isColorImage==False):
-                                print("ENTERED")
+                                #print("ENTERED")
                                 currentIntensityPixelValue = I.item(currentRowKernelLinedAgainstImage,currentColumnKernelLinedAgainstImage)
                                 newIntensityValue = abs(currentTemplateValue-currentIntensityPixelValue)
                                 summedKernelIntensityValues += newIntensityValue
 
                             elif (isColorImage):
                                 currentBluePixelValue = I.item(currentRowKernelLinedAgainstImage,currentColumnKernelLinedAgainstImage,0)
-                                newBluePixelValue = currentTemplateValue-currentBluePixelValue
-                                summedKernelBlueValues+=newBluePixelValue
+                                newBluePixelValue = abs(currentTemplateValue[0]-currentBluePixelValue)
+                                summedKernelIntensityValues+=newBluePixelValue
 
                                 currentGreenPixelValue = I.item(currentRowKernelLinedAgainstImage,currentColumnKernelLinedAgainstImage,1)
-                                newGreenPixelValue = currentTemplateValue-currentGreenPixelValue
-                                summedKernelGreenValues += newGreenPixelValue
+                                newGreenPixelValue = abs(currentTemplateValue[1]-currentGreenPixelValue)
+                                summedKernelIntensityValues += newGreenPixelValue
 
                                 currentRedPixelValue = I.item(currentRowKernelLinedAgainstImage,currentColumnKernelLinedAgainstImage,2)
-                                newRedPixelValue = currentTemplateValue-currentRedPixelValue
-                                summedKernelRedValues += newRedPixelValue
+                                newRedPixelValue = abs(currentTemplateValue[2]-currentRedPixelValue)
+                                summedKernelIntensityValues += newRedPixelValue
 
 
 
@@ -263,7 +323,7 @@ def SAD(I,T):
 
                         #print("CURRENT SUMMED VALUE:"+str(summedKernelIntensityValues))
 
-                print(summedKernelIntensityValues)
+                #print(summedKernelIntensityValues)
 
                 #Making sure the kernel total is atleast 1 (to not divide by 0 when using sobel edge kernels)
                 if (kernelTotal <= 0):
@@ -271,23 +331,13 @@ def SAD(I,T):
                     print("ENTERED KERNEL TOTAL")
 
 
-                if(isColorImage==False):
-                    currentTemplateMatrix['summedValues'] = summedKernelIntensityValues
-                    print("MATCHING FOUND IMAGE:" + str(currentTemplateMatrix))
-                    if(summedKernelIntensityValues<smallestFoundSummedValues):
+                currentTemplateMatrix['summedValues'] = summedKernelIntensityValues
+                print("MATCHING FOUND IMAGE:" + str(currentTemplateMatrix))
+                if(summedKernelIntensityValues<smallestFoundSummedValues):
 
-                        smallestFoundSummedValues =summedKernelIntensityValues
-                        matchingFoundImage = currentTemplateMatrix
+                    smallestFoundSummedValues =summedKernelIntensityValues
+                    matchingFoundImage = currentTemplateMatrix
 
-
-                elif(isColorImage):
-                    summedKernelBlueValues = int(summedKernelBlueValues/kernelTotal)
-                    summedKernelGreenValues = int(summedKernelGreenValues/kernelTotal)
-                    summedKernelRedValues = int(summedKernelRedValues/kernelTotal)
-
-                    newimage.itemset((row_index, column_index,0), summedKernelBlueValues)
-                    newimage.itemset((row_index, column_index, 1), summedKernelGreenValues)
-                    newimage.itemset((row_index, column_index, 2), summedKernelRedValues)
 
 
     print(matchingFoundImage)
@@ -310,7 +360,10 @@ ExampleImage = np.array([
 ])
 
 print(ExampleImage[0:2,0:3])
-SAD(ExampleImage,ExampleTemplate)
+print(SAD2(ExampleImage,ExampleTemplate))
+print(SSD(ExampleImage,ExampleTemplate))
+#print(getIndexesForElement(testarr,np.amin(testarr)))
+
 
 getSumOfAbsoluteDifferences(np.array([3,4,5]),np.array([4,5]))
 
@@ -320,7 +373,7 @@ root.withdraw()
 
 print("Browse and pick a template image")
 templatepath = browseImagesDialog(MessageForUser='Select your Template (Foreground)')
-template = getImageArray(templatepath,False)
+template = getImageArray(templatepath,True)
 templateOriginalSize = (template.shape[1],template.shape[0])
 print("Displaying your template image, size:"+str(templateOriginalSize))
 
@@ -331,14 +384,23 @@ displayImageGivenArray(template, windowTitle='Template:')
 #We then want to get 'matches' for the template on the image itself
 print("Enter a desired size for your template image:")
 templateSize = getUserInputDimension()
-displayImageGivenArray(ScaleByGivenDimensions(template,templateSize),windowTitle='Template(resized):')
+template = ScaleByGivenDimensions(template,templateSize)
+#displayImageGivenArray(template,windowTitle='Template(resized):')
 
 print("\n\n")
 
 print("Pick your matching window image:")
 imagepath = browseImagesDialog(MessageForUser='Select your Template (Foreground)')
-image = getImageArray(imagepath,False)
+image = getImageArray(imagepath,True)
 imageoriginalsize = (image.shape[1],image.shape[0])
 print("Displaying your matching window image, size:"+str(imageoriginalsize))
-displayImageGivenArray(image)
+#displayImageGivenArray(image)
 
+
+foundSADValues = SSD(image,template)
+minvalue = np.amin(foundSADValues)
+print("MIN")
+points = getIndexesForElement(foundSADValues,minvalue)
+print(points[0])
+
+displayImageGivenArray(drawRectangleOnImageGivenTemplate(image,points[0],template))
