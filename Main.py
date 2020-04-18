@@ -130,7 +130,17 @@ def getUserInputDimension():
     except:
         print("Error! Inputted Dimension was not in the form: '<width>x<height>'")
 
-def getIndexesForElement(array,element):
+def getIndexesGTEElement(array,element):
+    indexes = np.where(array >= element)
+    points = list(zip(indexes[1], indexes[0]))
+    return points
+
+def getIndexesLTEElement(array,element):
+    indexes = np.where(array <= element)
+    points = list(zip(indexes[1], indexes[0]))
+    return points
+
+def getIndexesForGivenElement(array,element):
     indexes = np.where(array == element)
     points = list(zip(indexes[1], indexes[0]))
     return points
@@ -155,9 +165,9 @@ def SAD2(I,T):
     return I
 
 def drawRectangleOnImage(I,topLeftPoint,dimension):
-    print(I)
-    print(topLeftPoint)
-    print(dimension)
+    # print(I)
+    # print(topLeftPoint)
+    # print(dimension)
 
     I = cv2.rectangle(I,topLeftPoint,dimension,(255,0,0),2)
     return I
@@ -166,27 +176,90 @@ def drawRectangleOnImageGivenTemplate(I,topLeftPoint,template):
     I=drawRectangleOnImage(I,topLeftPoint,(topLeftPoint[0]+template.shape[1],topLeftPoint[1]+template.shape[0]))
     return I
 
+def NCC(I,T):
+    template_height = T.shape[1]
+    template_width = T.shape[0]
+    template_area = template_width*template_height
+    template_mean = np.mean(T)
+    # print("TEMPLATE MEAN VALUE:"+str(template_mean))
+    #
+    # window = np.lib.stride_tricks.as_strided(I, shape=(
+    # I.shape[0] - template_height + 1, I.shape[1] - template_width + 1, template_height, template_width),
+    #                                        strides=I.strides * 2)
+    # templateSubMean = (T-template_mean)
+    # windowSubMean = (window-np.mean(window))
+    # windowStandardDeviation = np.sqrt((np.power(window-np.mean(window),2))/template_area).sum(axis=-1).sum(axis=-1)
+    # templateStandardDeviation = np.sqrt((np.power(T-template_mean,2))/template_area).sum(axis=-1).sum(axis=-1)
+    # ncc = ((templateSubMean*windowSubMean).sum(axis=-1).sum(axis=-1)/(windowStandardDeviation*templateStandardDeviation))
+
+    ncc = cv2.matchTemplate(I, T, cv2.TM_CCORR_NORMED)
+    #min_val,max_val,min_loc,max_loc = cv2.minMaxLoc(ncc)
+
+    print("Finished NCC")
+    return ncc
+
+def Cv2SSD(I,T):
+    ssd = cv2.matchTemplate(I, T, cv2.TM_SQDIFF)
+    return ssd
+
 def SSD(I,T):
     template_height = T.shape[1]
     template_width = T.shape[0]
 
-    view =np.lib.stride_tricks.as_strided(I,shape=(I.shape[0]-template_height+1,I.shape[1]-template_width+1,template_height,template_width),strides=I.strides*2)
-    ssd = ((view-T)*(view-T)).sum(axis=-1).sum(axis=-1)
-    print(ssd)
+    window =np.lib.stride_tricks.as_strided(I,shape=(I.shape[0]-template_height+1,I.shape[1]-template_width+1,template_height,template_width),strides=I.strides*2)
+    ssd = np.power(T-window,2).sum(axis=-1).sum(axis=-1)
+    #print(ssd)
     return ssd
 
-def SAD2(I,T):
+
+
+def SAD(I,T):
     template_height = T.shape[1]
     template_width = T.shape[0]
 
-    view =np.lib.stride_tricks.as_strided(I,shape=(I.shape[0]-template_height+1,I.shape[1]-template_width+1,template_height,template_width),strides=I.strides*2)
-    ssd = abs(view-T).sum(axis=-1).sum(axis=-1)
-    print(ssd)
-    return ssd
+    window =np.lib.stride_tricks.as_strided(I,shape=(I.shape[0]-template_height+1,I.shape[1]-template_width+1,template_height,template_width),strides=I.strides*2)
+    sad = abs(T-window).sum(axis=-1).sum(axis=-1)
+    return sad
+
+#threshold is between [0,255], to get good points use ~200
+def HarrisCorner(I, threshold:int=200, displayImage:bool=False):
+    imagecopy = np.copy(I)
+    cornerpoints=cv2.cornerHarris(imagecopy, 2, 3, 0.055)
+    #cornerpoints = cv2.cornerHarris(imagecopy, 7, 5, 0.05)
+    #cornerpoints = cv2.cornerHarris(imagecopy, 9, 7, 0.055)
 
 
-#Less efficient SAD
-def SAD(I,T):
+    imagecopy = np.empty(cornerpoints.shape,dtype=np.float32)
+    cv2.normalize(cornerpoints, imagecopy, alpha=0, beta=255,
+                  norm_type=cv2.NORM_MINMAX)
+    imagecopy = cv2.convertScaleAbs(imagecopy)
+
+    #draws circles around points detected by harris
+    for i in range(imagecopy.shape[0]):
+        for k in range(imagecopy.shape[1]):
+            if int(imagecopy[i,k])>threshold:
+                point = (k,i)
+                thickness = 2
+                radius = 5
+                color = (0)
+                cv2.circle(imagecopy, point,radius,color,thickness)
+
+    if(displayImage):
+        displayImageGivenArray(imagecopy)
+
+    return imagecopy
+
+def sliding_window(image, stepSize, windowSize):
+	# slide a window across the image
+	for y in range(0, image.shape[0], stepSize):
+		for x in range(0, image.shape[1], stepSize):
+			# yield the current window
+			yield (x, y, image[y:y + windowSize[1], x:x + windowSize[0]])
+
+
+
+#Less efficient SAD because it does not use numpy arrays
+def OldSAD(I,T):
     newimage = np.copy(I)
     isColorImage = None
 
@@ -346,6 +419,164 @@ def SAD(I,T):
 def getSumOfAbsoluteDifferences(image1Array:np.ndarray,image2Array:np.ndarray):
     return
 
+def getNSmallestValues(array,n:int):
+    flattentedarray = array.flatten()
+    print("SMALLEST:"+str(flattentedarray))
+
+    return np.partition(flattentedarray,n)
+
+def getNLargestValues(array,n:int):
+    flattentedarray = array.flatten()
+    print(np.partition(flattentedarray,-n)[-n:])
+    return np.partition(flattentedarray,-n)[-n:]
+
+def drawRectanglesAtGivenPointsTemplate(I,points,template):
+    for point in points:
+        drawRectangleOnImageGivenTemplate(I,point,template)
+    return I
+
+def LetUserChooseMatchingScore(I,T):
+    useroption = ""
+
+    selectingOption = True
+
+    while(useroption!='exit'):
+        if(selectingOption):
+            print("Select which matching score technique to use:\n"
+                  "1)SAD\n"
+                  "2)SSD\n"
+                  "3)NCC\n"
+                  "(enter the digit)")
+            useroption = input()
+
+            if(useroption.isdigit()==False):
+                print("Invalid option! (needs to be a digit: 1,2,3)")
+            else:
+                if(useroption=="1"):
+                    print("You selected SAD")
+                    amountofvalues = 50
+
+                    foundSADValues = SAD(I,T)
+                    smallestSADvalues = getNSmallestValues(foundSADValues, amountofvalues)
+                    points = getIndexesLTEElement(foundSADValues, smallestSADvalues[amountofvalues-1])
+
+                    displayImageGivenArray(drawRectanglesAtGivenPointsTemplate(I, points, template), windowTitle='SAD')
+
+                elif(useroption=="2"):
+                    print("You selected SSD")
+                    amountofvalues = 1
+
+                    foundSSDValues = SSD(I,T)
+                    smallestSSDvalues = getNSmallestValues(foundSSDValues, amountofvalues)
+                    points = getIndexesLTEElement(foundSSDValues, smallestSSDvalues[amountofvalues-1])
+
+                    displayImageGivenArray(drawRectanglesAtGivenPointsTemplate(I, points, template), windowTitle='SSD')
+                elif(useroption=="3"):
+                    print("You selected NCC")
+                    amountofvalues = 1
+
+                    foundNCCValues = NCC(I,T)
+                    biggestNCCvalues = getNLargestValues(foundNCCValues, amountofvalues)
+                    print(biggestNCCvalues)
+
+                    #points = getIndexesLTEElement(foundNCCValues, biggestNCCvalues[amountofvalues-1])
+                    points = getIndexesForGivenElement(foundNCCValues,np.amax(foundNCCValues))
+
+                    print("DISPLAYING")
+                    displayImageGivenArray(drawRectanglesAtGivenPointsTemplate(I, points, template), windowTitle='NCC')
+                break
+
+
+
+def disparity(left,right,templateSize,window):
+    image_height = left.shape[0]
+    image_width = left.shape[1]
+    halfTemplate = int((templateSize-1)/2)
+    disparityImage = np.zeros_like(left,dtype=np.float32)
+
+    for row in range(halfTemplate,image_height-halfTemplate):
+        smallestRow = int(max(row-halfTemplate,0))
+        biggestRow = int(min(row+halfTemplate+1,image_height))
+
+        for column in range(halfTemplate,image_width-halfTemplate):
+            smallestColumn = int(max(column-halfTemplate,0))
+            biggestColumn = int(min(column+halfTemplate+1,image_width))
+
+            template = left[smallestRow:biggestRow,smallestColumn:biggestColumn].astype(np.float32)
+            print(template.shape)
+
+            disparityMin = int(max(column-window/2,0))
+            disparityMax = int(min(column+window/2+2,image_width))
+
+            roi = right[smallestRow:biggestRow,disparityMin:disparityMax].astype(np.float32)
+            print(roi.shape)
+
+            correspondence = SAD(roi,template)
+            print("MADE")
+            minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(correspondence)
+            disparityImage[row,column]=np.arrange(correspondence.shape[1])(minLoc[0])
+
+    return disparityImage
+
+def slidingWindow(I,windowSize:int=3,stepSize:int=1,keepSlidingWindowWithinImage:bool=False):
+    image_height =I.shape[0]
+    image_width =I.shape[1]
+
+    halfWindowSize = int(windowSize/2)
+    #print(halfWindowSize)
+
+    AllWindows = []
+
+    if(keepSlidingWindowWithinImage==False):
+        for r in range(0,image_height,stepSize):
+            for c in range(0,image_width,stepSize):
+                print("CURR:"+str((r,c)))
+
+                #Ensures that the indexes are within the image
+                startRow = max(0,r-halfWindowSize)
+                startColumn = max(0,c-halfWindowSize)
+                endRow = min(image_height,r+halfWindowSize)
+                endColumn = min(image_width,c+halfWindowSize)
+
+                print("Start:"+str((startRow,startColumn)))
+                print("End:"+str((endRow,endColumn)))
+
+                #Using the start,end indexes, indexing the window out:
+                window = I[startRow:endRow+1,startColumn:endColumn+1]
+                print(window)
+                print('---')
+                AllWindows.append(window)
+    else:
+        for r in range(0, image_height, stepSize):
+            for c in range(0, image_width, stepSize):
+                print("CURR:" + str((r, c)))
+
+
+                # Ensures that the indexes are within the image
+                startRow = r
+                startColumn = c
+                endRow = r+windowSize
+                endColumn = c+windowSize
+
+                if(endRow<=image_height and endColumn<=image_width):
+
+                    print("Start:" + str((startRow, startColumn)))
+                    print("End:" + str((endRow, endColumn)))
+
+                    # Using the start,end indexes, indexing the window out:
+                    window = I[startRow:endRow, startColumn:endColumn]
+                    print(window)
+                    print('---')
+                    AllWindows.append(window)
+
+
+    print("All Windows:")
+    print(AllWindows)
+
+
+
+
+
 
 ExampleTemplate = np.array([
     [2, 5, 5],
@@ -353,15 +584,32 @@ ExampleTemplate = np.array([
     [7, 5, 9]
 ])
 
+print("EXAMPLE:")
+
 ExampleImage = np.array([
     [2 ,7, 5, 8, 6],
     [1, 7, 4, 2, 7],
     [8, 4, 6, 8, 5]
 ])
 
+slidingWindow(ExampleImage,3,1,keepSlidingWindowWithinImage=True)
+
+listOfImages = getAllImagesFromInputImagesDir(IMAGEDIR, getabspaths=True)
+print(listOfImages)
+stopsignimage = getImageArray(getImageFromListOfImages(listOfImages,'stopsign'),True)
+streetimage = getImageArray(getImageFromListOfImages(listOfImages,'street'),True)
+
+
+
 print(ExampleImage[0:2,0:3])
-print(SAD2(ExampleImage,ExampleTemplate))
-print(SSD(ExampleImage,ExampleTemplate))
+print("TESTING:")
+SAD(ExampleImage,ExampleTemplate)
+print(ExampleTemplate)
+print(np.std(ExampleTemplate,ddof=0))
+print("NCC")
+#print(NCC(ExampleImage,ExampleTemplate))
+print()
+#SSD(ExampleImage,ExampleTemplate)
 #print(getIndexesForElement(testarr,np.amin(testarr)))
 
 
@@ -371,36 +619,53 @@ getSumOfAbsoluteDifferences(np.array([3,4,5]),np.array([4,5]))
 root = tkinter.Tk()
 root.withdraw()
 
-print("Browse and pick a template image")
-templatepath = browseImagesDialog(MessageForUser='Select your Template (Foreground)')
-template = getImageArray(templatepath,True)
-templateOriginalSize = (template.shape[1],template.shape[0])
-print("Displaying your template image, size:"+str(templateOriginalSize))
-
-displayImageGivenArray(template, windowTitle='Template:')
+#print("Browse and pick a template image")
+#templatepath = browseImagesDialog(MessageForUser='Select your Template (Foreground)')
+# #template = getImageArray(templatepath,True)
+# template = stopsignimage
+# templateOriginalSize = (template.shape[1],template.shape[0])
+# print("Displaying your template image, size:"+str(templateOriginalSize))
+#
+# displayImageGivenArray(template, windowTitle='Template:',waitKey=0)
 
 
 #Method1: Sliding Template T(x,y) across an Image I(x,y)
 #We then want to get 'matches' for the template on the image itself
-print("Enter a desired size for your template image:")
-templateSize = getUserInputDimension()
-template = ScaleByGivenDimensions(template,templateSize)
-#displayImageGivenArray(template,windowTitle='Template(resized):')
+#print("Enter a desired size for your template image:")
+#templateSize = getUserInputDimension()
+#templateSize = (10,10)
+#template = ScaleByGivenDimensions(template,templateSize)
+#displayImageGivenArray(template,windowTitle='Template(resized):',waitKey=0)
 
-print("\n\n")
+#print("\n\n")
 
-print("Pick your matching window image:")
-imagepath = browseImagesDialog(MessageForUser='Select your Template (Foreground)')
-image = getImageArray(imagepath,True)
-imageoriginalsize = (image.shape[1],image.shape[0])
-print("Displaying your matching window image, size:"+str(imageoriginalsize))
-#displayImageGivenArray(image)
+#print("Pick your matching window image:")
+#imagepath = browseImagesDialog(MessageForUser='Select your Template (Foreground)')
+#image = getImageArray(imagepath,True)
+# image = streetimage
+# print("IMAGE:")
+# print(image)
+# imageoriginalsize = (image.shape[1],image.shape[0])
+# print("Displaying your matching window image, size:"+str(imageoriginalsize))
+#displayImageGivenArray(image,waitKey=0)
 
 
-foundSADValues = SSD(image,template)
-minvalue = np.amin(foundSADValues)
-print("MIN")
-points = getIndexesForElement(foundSADValues,minvalue)
-print(points[0])
+#Performs harris corner on the image to detect corners
+#harriscornerimage = HarrisCorner(image,100,True)
 
-displayImageGivenArray(drawRectangleOnImageGivenTemplate(image,points[0],template))
+#Lets the user pick which matching score they want to use:
+#LetUserChooseMatchingScore(image,template)
+
+#leftImagePath = browseImagesDialog(IMAGEDIR,'Select your left image')
+#rightImagePath = browseImagesDialog(IMAGEDIR,'Select your right image')
+leftImagePath = getImageFromListOfImages(listOfImages,'scene1.row3.col1')
+rightImagePath = getImageFromListOfImages(listOfImages,'scene1.row3.col5')
+
+
+leftImage = getImageArray(leftImagePath,False)
+rightImage = getImageArray(rightImagePath,False)
+
+#displayImageGivenArray(leftImage,windowTitle='Left Image',waitKey=0)
+#displayImageGivenArray(rightImage,windowTitle='Right Image',waitKey=0)
+
+displayImageGivenArray(disparity(leftImage,rightImage,5,3),windowTitle='Disparity Image',waitKey=0)
