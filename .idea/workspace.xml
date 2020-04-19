@@ -15,38 +15,11 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="252">
-              <caret line="998" column="50" selection-start-line="998" selection-start-column="50" selection-end-line="998" selection-end-column="50" />
+            <state relative-caret-position="389">
+              <caret line="1278" column="125" selection-start-line="1278" selection-start-column="125" selection-end-line="1278" selection-end-column="125" />
               <folding>
                 <element signature="e#465#483#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file:///Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/codecs.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="141">
-              <caret line="320" selection-start-line="320" selection-end-line="320" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/pydevd.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="341">
-              <caret line="1740" selection-start-line="1740" selection-end-line="1740" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydev_imps/_pydev_execfile.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="17" selection-start-line="17" selection-end-line="17" />
             </state>
           </provider>
         </entry>
@@ -73,6 +46,8 @@
       <find>drawRe</find>
       <find>SAD</find>
       <find>slidi</find>
+      <find>SSD</find>
+      <find>mean</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -86,8 +61,8 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="720" />
-    <option name="y" value="23" />
+    <option name="x" value="586" />
+    <option name="y" value="28" />
     <option name="width" value="720" />
     <option name="height" value="877" />
   </component>
@@ -176,7 +151,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="720" y="23" width="720" height="877" extended-state="0" />
+    <frame x="586" y="28" width="720" height="877" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" weight="0.24892704" />
@@ -227,13 +202,18 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Main.py</url>
-          <line>883</line>
+          <line>945</line>
           <option name="timeStamp" value="11" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Main.py</url>
-          <line>1047</line>
+          <line>1111</line>
           <option name="timeStamp" value="17" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/Main.py</url>
+          <line>1078</line>
+          <option name="timeStamp" value="18" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -292,13 +272,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydev_imps/_pydev_execfile.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="17" selection-start-line="17" selection-end-line="17" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/pydevd.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="341">
@@ -309,14 +282,21 @@
     <entry file="file:///Library/Frameworks/Python.framework/Versions/3.7/lib/python3.7/codecs.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="141">
-          <caret line="320" selection-start-line="320" selection-end-line="320" />
+          <caret line="332" selection-start-line="332" selection-end-line="332" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydev_imps/_pydev_execfile.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="17" selection-start-line="17" selection-end-line="17" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="252">
-          <caret line="998" column="50" selection-start-line="998" selection-start-column="50" selection-end-line="998" selection-end-column="50" />
+        <state relative-caret-position="389">
+          <caret line="1278" column="125" selection-start-line="1278" selection-start-column="125" selection-end-line="1278" selection-end-column="125" />
           <folding>
             <element signature="e#465#483#0" expanded="true" />
           </folding>
