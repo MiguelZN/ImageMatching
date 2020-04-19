@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="00f163f9-5d47-4173-b2e5-a0f004b902b2" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Main.py" beforeDir="false" afterPath="$PROJECT_DIR$/Main.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -15,8 +16,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="338">
-              <caret line="1274" column="34" lean-forward="true" selection-start-line="1274" selection-start-column="34" selection-end-line="1274" selection-end-column="34" />
+            <state relative-caret-position="374">
+              <caret line="1279" column="93" lean-forward="true" selection-start-line="1279" selection-start-column="93" selection-end-line="1279" selection-end-column="93" />
               <folding>
                 <element signature="e#465#483#0" expanded="true" />
               </folding>
@@ -61,8 +62,8 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="586" />
-    <option name="y" value="28" />
+    <option name="x" value="413" />
+    <option name="y" value="36" />
     <option name="width" value="720" />
     <option name="height" value="877" />
   </component>
@@ -151,7 +152,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="586" y="28" width="720" height="877" extended-state="0" />
+    <frame x="413" y="36" width="720" height="877" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" weight="0.24892704" />
@@ -295,8 +296,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="338">
-          <caret line="1274" column="34" lean-forward="true" selection-start-line="1274" selection-start-column="34" selection-end-line="1274" selection-end-column="34" />
+        <state relative-caret-position="374">
+          <caret line="1279" column="93" lean-forward="true" selection-start-line="1279" selection-start-column="93" selection-end-line="1279" selection-end-column="93" />
           <folding>
             <element signature="e#465#483#0" expanded="true" />
           </folding>

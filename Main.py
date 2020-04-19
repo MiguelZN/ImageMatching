@@ -1107,7 +1107,7 @@ def disparity2(left,right,templateSize:int=3,windowSize:int=5,stepSize:int=1,met
             print("rightx:"+str(correspondingXinRight))
 
             #disparityValue = abs(correspondingXinRight-c) #Subtract right image location x by left image location x
-            disparityValue = c-correspondingXinRight # Subtract right image location x by left image location x
+            disparityValue = c-correspondingXinRight # Subtract left image x from right image x
             print("DISPARITY VALUE:" + str(disparityValue))
             disparityImage[r][c]=int(disparityValue)
 
@@ -1275,5 +1275,7 @@ newSSD1D(ExampleImage,ExampleTemplate3,keepSlidingWindowWithinImage=True)
 #newSAD(leftImage,ExampleTemplate)
 #displayImageGivenArray(leftImage)
 #disparityPyrmaid(leftImage,rightImage,5)
-displayImageGivenArray(disparity2(leftImage,rightImage,templateSize=3,windowSize=50,stepSize=1),windowTitle='Disparity Image',waitKey=0)
-#displayImageGivenArray(disparity2(leftImage,rightImage,templateSize=5,windowSize=10,stepSize=1),windowTitle='Disparity Image')
+# displayImageGivenArray(disparity2(leftImage,rightImage,templateSize=3,windowSize=50,stepSize=1),windowTitle='Disparity Image',waitKey=0)
+# displayImageGivenArray(disparity2(leftImage,rightImage,templateSize=7,windowSize=50,stepSize=1),windowTitle='Disparity Image',waitKey=0)
+# displayImageGivenArray(disparity2(leftImage,rightImage,templateSize=11,windowSize=100,stepSize=1),windowTitle='Disparity Image',waitKey=0)
+displayImageGivenArray(disparity2(leftImage,rightImage,templateSize=3,windowSize=100,stepSize=1),windowTitle='Disparity Image',waitKey=0)
