@@ -218,7 +218,7 @@ def SAD(I,T):
     template_width = T.shape[0]
 
     window =np.lib.stride_tricks.as_strided(I,shape=(I.shape[0]-template_height+1,I.shape[1]-template_width+1,template_height,template_width),strides=I.strides*2)
-    sad = abs(T-window).sum(axis=-1).sum(axis=-1)
+    sad = abs(window-T).sum(axis=-1).sum(axis=-1)
     return sad
 
 #threshold is between [0,255], to get good points use ~200
@@ -492,11 +492,11 @@ def disparity(left,right,templateSize,window):
     image_height = left.shape[0]
     image_width = left.shape[1]
     halfTemplate = int((templateSize-1)/2)
-    disparityImage = np.zeros_like(left,dtype=np.float32)
+    disparityImage = np.zeros(left.shape,dtype=np.float32)
 
     for row in range(halfTemplate,image_height-halfTemplate):
-        smallestRow = int(max(row-halfTemplate,0))
-        biggestRow = int(min(row+halfTemplate+1,image_height))
+        smallestRow = max(row-halfTemplate,0)
+        biggestRow = min(row+halfTemplate+1,image_height)
 
         for column in range(halfTemplate,image_width-halfTemplate):
             smallestColumn = int(max(column-halfTemplate,0))
@@ -505,17 +505,20 @@ def disparity(left,right,templateSize,window):
             template = left[smallestRow:biggestRow,smallestColumn:biggestColumn].astype(np.float32)
             print(template.shape)
 
-            disparityMin = int(max(column-window/2,0))
-            disparityMax = int(min(column+window/2+2,image_width))
+            disparityMin = int(max((column-window)/2,0))
+            disparityMax = int(min((column+window)/2+1,image_width))
 
             roi = right[smallestRow:biggestRow,disparityMin:disparityMax].astype(np.float32)
             print(roi.shape)
 
-            correspondence = SAD(roi,template)
+            correspondence = Cv2SSD(roi,template)
             print("MADE")
+            print(correspondence)
             minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(correspondence)
-            disparityImage[row,column]=np.arrange(correspondence.shape[1])(minLoc[0])
+            print(minLoc)
+            disparityImage[row,column]=np.arange(correspondence.shape[1])[minLoc[0]]
 
+    print(disparityImage)
     return disparityImage
 
 def slidingWindow(I,windowSize:int=3,stepSize:int=1,keepSlidingWindowWithinImage:bool=False):
@@ -573,8 +576,199 @@ def slidingWindow(I,windowSize:int=3,stepSize:int=1,keepSlidingWindowWithinImage
     print("All Windows:")
     print(AllWindows)
 
+def newSAD(I,T,stepSize:int=1,keepSlidingWindowWithinImage:bool=False):
+    image_height =I.shape[0]
+    image_width =I.shape[1]
 
 
+
+    templateSize = T.shape[1]
+
+    halfTemplateSize = int(templateSize/2)
+    #print(halfWindowSize)
+
+    AllWindows = []
+
+    correspondenceValues = []
+
+    if(keepSlidingWindowWithinImage==False):
+        for r in range(0,image_height,stepSize):
+            for c in range(0,image_width,stepSize):
+
+                if(r == 15 and c ==15):
+                    print('f')
+
+                blankTemp = np.zeros_like(T)
+
+                #Ensures that the indexes are within the image
+                startRow = max(0,r-halfTemplateSize)
+                startColumn = max(0,c-halfTemplateSize)
+                endRow = min(image_height-1,r+halfTemplateSize)
+                endColumn = min(image_width-1,c+halfTemplateSize)
+
+                print("Start:" + str((startRow, startColumn)))
+                print("CURR:" + str((r, c))+"|"+str(I[r][c]))
+                print("End:"+str((endRow,endColumn)))
+
+                #Using the start,end indexes, indexing the window out:
+                window = I[startRow:endRow+1,startColumn:endColumn+1]
+                print("WINDOW")
+                print(window)
+                AllWindows.append(window)
+
+                cToSR = r - startRow
+                cToSC = c-startColumn
+
+                ERToc = endRow-r
+                ECToc = endColumn-c
+
+                # Ensures that the indexes are within the image
+                TstartRow = max(0, halfTemplateSize-cToSR)
+                TstartColumn = max(0, halfTemplateSize-cToSC)
+                TendRow = min(templateSize-1, halfTemplateSize+ERToc)
+                TendColumn = min(templateSize-1, halfTemplateSize+ECToc)
+
+                print("cToSR:" + str(cToSR))
+                print("cToSC:"+str(cToSC))
+
+                print("ERToc:" + str(ERToc))
+                print("ECToc:" + str(ECToc))
+
+
+                #ROW,COLUMN
+                #STARTROW:ENDROW, STARTCOLUMN:ENDCOLUMN
+                template = T[TstartRow:TendRow + 1, TstartColumn:TendColumn + 1]
+
+                ExampleTemplate = np.array([
+                    [2, 5, 5],
+                    [4, 0, 7],
+                    [7, 5, 9]
+                ])
+                ExampleImage = np.array([
+                    [2, 7, 5, 8, 6],
+                    [1, 7, 4, 2, 7],
+                    [8, 4, 6, 8, 5]
+                ])
+
+
+                #print("ROW DIFF:")
+                #print(endRow+1-startRow)
+
+                print("TEMPLATE")
+                print(template)
+                print('---')
+
+                correspondence = np.sum(np.abs(template-window))
+                correspondenceValues.append(correspondence)
+
+    else:
+        for r in range(0, image_height, stepSize):
+            for c in range(0, image_width, stepSize):
+                print("CURR:" + str((r, c)))
+
+
+                # Ensures that the indexes are within the image
+                startRow = r
+                startColumn = c
+                endRow = r+templateSize
+                endColumn = c+templateSize
+
+                if(endRow<=image_height and endColumn<=image_width):
+
+                    print("Start:" + str((startRow, startColumn)))
+                    print("End:" + str((endRow, endColumn)))
+
+                    # Using the start,end indexes, indexing the window out:
+                    window = I[startRow:endRow, startColumn:endColumn]
+                    print(window)
+                    print('---')
+                    AllWindows.append(window)
+
+
+    print("All Windows:")
+    print(AllWindows)
+    print(correspondenceValues)
+
+def disparity2(left,right,templateSize:int=5,windowSize:int=5,stepSize:int=1,keepSlidingWindowWithinImage:bool=False):
+    image_height =left.shape[0]
+    image_width =left.shape[1]
+
+    halfTemplateSize = int(templateSize/2)
+    disparityImage = np.zeros_like(left, dtype=np.float32)
+    #print(halfWindowSize)
+
+    if(keepSlidingWindowWithinImage==False):
+        for r in range(0,image_height,stepSize):
+            for c in range(0,image_width,stepSize):
+                print("CURR:"+str((r,c)))
+
+                #Ensures that the indexes are within the image
+                startRow = max(0,r-halfTemplateSize)
+                startColumn = max(0,c-halfTemplateSize)
+                endRow = min(image_height,r+halfTemplateSize)
+                endColumn = min(image_width,c+halfTemplateSize)
+
+                print("Start:"+str((startRow,startColumn)))
+                print("End:"+str((endRow,endColumn)))
+
+                #Using the start,end indexes, indexing the window out:
+                template = left[startRow:endRow+1,startColumn:endColumn+1].astype(np.float32)
+
+                windowStart = max(0,c-int(windowSize/2))
+                windowEnd = min(image_width,c+int((windowSize)/2)+1)
+                print("WINDOW WITH:")
+                print("WINDOW START:"+str(windowStart))
+                print("WINDOW END:"+str(windowEnd))
+
+                window = right[startRow:endRow+1,windowStart:windowEnd].astype(np.float32) #gets the entire width*templateHeight row in the right image
+                print("WINDOW:")
+                print(window)
+                print(window.shape)
+
+                windowValues = SSD(window,template)
+                print(windowValues)
+                minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(windowValues)
+
+                print(minVal)
+                print(minLoc)
+                correspondingXinRight = minLoc[0]
+
+
+
+                print("X LEFT:"+str(c))
+                print("X RIGHT:"+str(correspondingXinRight))
+
+                if(r == 10 and c == 10):
+                    print('fds')
+
+                print("MAX:")
+                print(np.arange(windowValues.shape[1])[correspondingXinRight])
+
+                disparityValue = c-correspondingXinRight #Subtract right image location x by left image location x
+                print("DISPARITY VALUE:" + str(disparityValue))
+                disparityImage[r][c]=disparityValue
+    else:
+        for r in range(0, image_height, stepSize):
+            for c in range(0, image_width, stepSize):
+                print("CURR:" + str((r, c)))
+
+
+                # Ensures that the indexes are within the image
+                startRow = r
+                startColumn = c
+                endRow = r+windowSize
+                endColumn = c+windowSize
+
+                if(endRow<=image_height and endColumn<=image_width):
+
+                    print("Start:" + str((startRow, startColumn)))
+                    print("End:" + str((endRow, endColumn)))
+
+                    # Using the start,end indexes, indexing the window out:
+                    template = left[startRow:endRow, startColumn:endColumn]
+
+
+    return disparityImage
 
 
 
@@ -591,6 +785,8 @@ ExampleImage = np.array([
     [1, 7, 4, 2, 7],
     [8, 4, 6, 8, 5]
 ])
+
+print(ExampleImage[0:2,::])
 
 slidingWindow(ExampleImage,3,1,keepSlidingWindowWithinImage=True)
 
@@ -662,10 +858,15 @@ leftImagePath = getImageFromListOfImages(listOfImages,'scene1.row3.col1')
 rightImagePath = getImageFromListOfImages(listOfImages,'scene1.row3.col5')
 
 
-leftImage = getImageArray(leftImagePath,False)
-rightImage = getImageArray(rightImagePath,False)
+leftImage = getImageArray(leftImagePath,intensitiesOnly=True).astype(np.float32)
+rightImage = getImageArray(rightImagePath,intensitiesOnly=True).astype(np.float32)
+
 
 #displayImageGivenArray(leftImage,windowTitle='Left Image',waitKey=0)
 #displayImageGivenArray(rightImage,windowTitle='Right Image',waitKey=0)
 
-displayImageGivenArray(disparity(leftImage,rightImage,5,3),windowTitle='Disparity Image',waitKey=0)
+print("SAD--------")
+newSAD(ExampleImage,ExampleTemplate)
+#newSAD(leftImage,ExampleTemplate)
+#displayImageGivenArray(disparity2(leftImage,rightImage,templateSize=3,windowSize=5,stepSize=1),windowTitle='Disparity Image',waitKey=0)
+#displayImageGivenArray(disparity(leftImage,rightImage,5,0),windowTitle='Disparity Image',waitKey=0)
