@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="00f163f9-5d47-4173-b2e5-a0f004b902b2" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Main.py" beforeDir="false" afterPath="$PROJECT_DIR$/Main.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -16,11 +15,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="374">
-              <caret line="1279" column="93" lean-forward="true" selection-start-line="1279" selection-start-column="93" selection-end-line="1279" selection-end-column="93" />
-              <folding>
-                <element signature="e#465#483#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="165">
+              <caret line="760" lean-forward="true" selection-start-line="760" selection-end-line="760" />
             </state>
           </provider>
         </entry>
@@ -49,6 +45,13 @@
       <find>slidi</find>
       <find>SSD</find>
       <find>mean</find>
+      <find>pyramid</find>
+      <find>scaleby</find>
+      <find>Start</find>
+      <find>print(&quot;Start</find>
+      <find>harriscorner</find>
+      <find>where</find>
+      <find>zip</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -62,8 +65,8 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="413" />
-    <option name="y" value="36" />
+    <option name="x" value="720" />
+    <option name="y" value="23" />
     <option name="width" value="720" />
     <option name="height" value="877" />
   </component>
@@ -152,15 +155,15 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="413" y="36" width="720" height="877" extended-state="0" />
+    <frame x="720" y="23" width="720" height="877" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" weight="0.24892704" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24892704" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3299363" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.58980894" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -203,17 +206,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Main.py</url>
-          <line>945</line>
-          <option name="timeStamp" value="11" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Main.py</url>
-          <line>1111</line>
+          <line>594</line>
           <option name="timeStamp" value="17" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Main.py</url>
-          <line>1078</line>
+          <line>533</line>
           <option name="timeStamp" value="18" />
         </line-breakpoint>
       </breakpoints>
@@ -294,13 +292,16 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/input_images/scene1.row3.col5.jpg">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/input_images/scene1.row3.col1.jpg">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
     <entry file="file://$PROJECT_DIR$/Main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="374">
-          <caret line="1279" column="93" lean-forward="true" selection-start-line="1279" selection-start-column="93" selection-end-line="1279" selection-end-column="93" />
-          <folding>
-            <element signature="e#465#483#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="165">
+          <caret line="760" lean-forward="true" selection-start-line="760" selection-end-line="760" />
         </state>
       </provider>
     </entry>
