@@ -15,8 +15,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="165">
-              <caret line="760" lean-forward="true" selection-start-line="760" selection-end-line="760" />
+            <state relative-caret-position="353">
+              <caret line="738" lean-forward="true" selection-start-line="738" selection-end-line="738" />
             </state>
           </provider>
         </entry>
@@ -49,9 +49,12 @@
       <find>scaleby</find>
       <find>Start</find>
       <find>print(&quot;Start</find>
-      <find>harriscorner</find>
       <find>where</find>
       <find>zip</find>
+      <find>harriscorner</find>
+      <find>2BGR</find>
+      <find>BGR</find>
+      <find>matchFeatures</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -65,9 +68,9 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="720" />
+    <option name="x" value="399" />
     <option name="y" value="23" />
-    <option name="width" value="720" />
+    <option name="width" value="1041" />
     <option name="height" value="877" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -155,15 +158,15 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="720" y="23" width="720" height="877" extended-state="0" />
+    <frame x="399" y="23" width="1041" height="877" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24892704" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.17058824" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.58980894" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.40636942" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -206,12 +209,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Main.py</url>
-          <line>594</line>
+          <line>606</line>
           <option name="timeStamp" value="17" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Main.py</url>
-          <line>533</line>
+          <line>545</line>
           <option name="timeStamp" value="18" />
         </line-breakpoint>
       </breakpoints>
@@ -300,8 +303,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="165">
-          <caret line="760" lean-forward="true" selection-start-line="760" selection-end-line="760" />
+        <state relative-caret-position="353">
+          <caret line="738" lean-forward="true" selection-start-line="738" selection-end-line="738" />
         </state>
       </provider>
     </entry>

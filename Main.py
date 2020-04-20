@@ -230,7 +230,7 @@ def HarrisCorner2(I, threshold:int=200, displayImage:bool=False):
 
     return imagecopy
 
-def HarrisCorner(I, threshold:int=200, displayImage:bool=False):
+def HarrisCorner(I,displayImage:bool=False):
     imagecopy = np.copy(I)
     corners = cv2.cornerHarris(I, 2, 3, 0.04)
 
@@ -238,7 +238,7 @@ def HarrisCorner(I, threshold:int=200, displayImage:bool=False):
     print(corners2)
 
     indexes = np.where(corners2>(0.01*corners2.max()))
-    indexes = list(zip(indexes[0], indexes[1]))
+    points = list(zip(indexes[0], indexes[1]))
     print(indexes)
 
     imagecopy = cv2.cvtColor(I,cv2.COLOR_GRAY2RGB)
@@ -246,16 +246,52 @@ def HarrisCorner(I, threshold:int=200, displayImage:bool=False):
     print(imagecopy.shape)
     displayImageGivenArray(imagecopy,windowTitle='GRAY TO COLOR')
 
-    for point in indexes:
+    for point in points:
         imagecopy[point[0]][point[1]] = [0,0,255]
 
 
     if(displayImage):
         displayImageGivenArray(imagecopy)
 
-    return imagecopy
+    return points
+
+def matchFeaturesTwoImages(leftImage,rightImage,windowSize:int=10):
+    leftImageColored = cv2.cvtColor(leftImage,cv2.COLOR_GRAY2RGB)
+    rightImageColored = cv2.cvtColor(rightImage,cv2.COLOR_GRAY2RGB)
+
+    pointsLeftImage = HarrisCorner(leftImage)
+    print("Left Points:")
+    print(pointsLeftImage)
+    pointsRightImage = HarrisCorner(rightImage)
+    print("Right Points:")
+    print(pointsRightImage)
+
+    # Initiate ORB detector
+    orb = cv2.ORB_create()
+
+    print("LEFT IMAGE:")
+    print(len(leftImage.shape))
+
+    # find the keypoints and descriptors with ORB
+    kp1, des1 = orb.detectAndCompute(leftImageColored, None)
+    kp2, des2 = orb.detectAndCompute(rightImageColored, None)
+
+    # create BFMatcher object
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
 
 
+    #Match descriptors.
+    matches = bf.match(des1, des2)
+
+    #Sort them in the order of their distance.
+    matches = sorted(matches, key=lambda x: x.distance)
+
+    leftImageuint8 = cv2.convertScaleAbs(leftImage)
+    rightImageuint8 = cv2.convertScaleAbs(rightImage)
+
+    print("MATCHES:")
+    img3 = cv2.drawMatches(leftImageuint8, kp1, rightImageuint8, kp2, matches[:10],None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+    displayImageGivenArray(img3,windowTitle='MATCHES')
 
 def getSumOfAbsoluteDifferences(image1Array:np.ndarray,image2Array:np.ndarray):
     return
@@ -387,11 +423,6 @@ def slidingWindow(I,windowSize:int=3,stepSize:int=1,keepSlidingWindowWithinImage
 def SSD1D(I,T,stepSize:int=1,keepSlidingWindowWithinImage:bool=False):
     image_height =I.shape[0]
     image_width =I.shape[1]
-
-    # print("INPUTTED IMAGE:")
-    # print(I)
-
-
     templateHeightSize = T.shape[0]#height
     templateWidthSize = T.shape[1] #width
     if (image_height != T.shape[0]):
@@ -400,17 +431,11 @@ def SSD1D(I,T,stepSize:int=1,keepSlidingWindowWithinImage:bool=False):
         print(T)
         raise Exception("WINDOW AND TEMPLATE DO NOT HAVE THE SAME HEIGHT")
 
-    #halfTemplateSize = int(templateSize/2)
-
-
     AllWindows = []
 
     correspondenceValues = []
 
     for c in range(0, image_width, stepSize):
-        # print("CURR:" + str((0, c)))
-
-
         # Ensures that the indexes are within the image
         startRow = 0
         startColumn = c
@@ -418,24 +443,11 @@ def SSD1D(I,T,stepSize:int=1,keepSlidingWindowWithinImage:bool=False):
         endColumn = c+templateWidthSize
 
         if(endRow<=image_height and endColumn<=image_width):
-
-            #print("Start:" + str((startRow, startColumn)))
-            # print("End:" + str((endRow, endColumn)))
-            #
-            # print("TEMPLATE:")
-            # print(T)
-
             # Using the start,end indexes, indexing the window out:
             window = I[startRow:endRow, startColumn:endColumn]
-            # print("WINDOW:")
-            # print(window)
-            # print('---')
             AllWindows.append(window)
-
-
             correspondence = np.sum(np.power(T-window,2))
             correspondenceValues.append(correspondence)
-    #print(correspondenceValues)
     return correspondenceValues
 
 def SAD1D(I,T,stepSize:int=1,keepSlidingWindowWithinImage:bool=False):
@@ -621,8 +633,6 @@ def propogateDisparityMap(disparitymap):
     print(disparitymap)
     disparitymap_height = disparitymap.shape[0]
     disparitymap_width = disparitymap.shape[1]
-    exit(0)
-
 
     newSize = (int(disparitymap_width*2),int(disparitymap_height*2))
     print(newSize)
@@ -704,12 +714,36 @@ ExampleTemplate3 = np.array([
 
 
 print("EXAMPLE:")
-
 ExampleImage = np.array([
+                    [2, 7, 5, 8, 6],
+                    [1, 7, 4, 2, 7],
+                    [8, 4, 6, 8, 5]
+                ],dtype=np.uint8)
+
+ExampleImage3 = np.array([
                     [2, 7, 5, 8, 6,2, 7, 2, 5, 5],
                     [1, 7, 4, 2, 7,2, 7, 4, 0, 7],
                     [8, 4, 6, 8, 5,2, 7, 7, 5, 9]
                 ],dtype=np.uint8)
+
+ExampleImage32 = np.array([
+                    [0, 5, 6, 2, 7, 5, 8, 6, 2, 7],
+                    [0, 5, 6, 2, 7, 2, 7, 4, 0, 7],
+                    [8, 4, 6, 8, 5, 2, 7, 7, 5, 9]
+                ],dtype=np.uint8)
+
+leftToRight = disparity(ExampleImage3,ExampleImage32,3,15)
+#displayImageGivenArray(leftToRight)
+rightToLeft = disparity(ExampleImage32,ExampleImage3,3,15)
+#displayImageGivenArray(rightToLeft)
+
+print("LEFT TO RIGHT:")
+print(leftToRight)
+
+print("RIGHT TO LEFT:")
+print(rightToLeft)
+exit(0)
+
 
 ExampleImage2 = np.array([
                     [2, 7, 5, 8, 6,2, 7, 2, 5, 5],
@@ -760,7 +794,7 @@ image = streetimage
 
 
 #Performs harris corner on the image to detect corners
-harriscornerimage = HarrisCorner(image,100,True)
+harriscornerimage = HarrisCorner(image,True)
 
 #Lets the user pick which matching score they want to use:
 #LetUserChooseMatchingScore(image,template)
@@ -770,15 +804,12 @@ harriscornerimage = HarrisCorner(image,100,True)
 leftImagePath = getImageFromListOfImages(listOfImages,'scene1.row3.col1')
 rightImagePath = getImageFromListOfImages(listOfImages,'scene1.row3.col5')
 
-
-# leftImage = getImageArray(leftImagePath,intensitiesOnly=True)
-# rightImage = getImageArray(rightImagePath,intensitiesOnly=True)
+#Returns the images as float 32 (but need to normalize to get them to between [0,1]
 leftImage = getImageArray(leftImagePath,intensitiesOnly=True).astype(np.float32)
 rightImage = getImageArray(rightImagePath,intensitiesOnly=True).astype(np.float32)
-leftImage = leftImage/255
-rightImage = rightImage/255
-print(leftImage.dtype)
-print(leftImage)
+leftImage = leftImage/128
+rightImage = rightImage/128
+#----------------------
 
 #exit(0)
 
@@ -791,7 +822,7 @@ print(NCC1D(ExampleImage,ExampleTemplate,keepSlidingWindowWithinImage=True))
 print(cv2NCC(ExampleImage,ExampleTemplate))
 #exit(0)
 
-#SSD1D(ExampleImage,ExampleTemplate,keepSlidingWindowWithinImage=True)
+print(SSD1D(ExampleImage,ExampleTemplate,keepSlidingWindowWithinImage=True))
 #SSD1D(ExampleImage2,ExampleTemplate2,keepSlidingWindowWithinImage=True)
 #NCC1D(ExampleImage,ExampleTemplate3,keepSlidingWindowWithinImage=True)
 
@@ -799,9 +830,11 @@ print(cv2NCC(ExampleImage,ExampleTemplate))
 displayImageGivenArray(leftImage)
 displayImageGivenArray(rightImage)
 
-harriscornerimage = HarrisCorner(leftImage,100,True)
-harriscornerimage = HarrisCorner(rightImage,100,True)
-disparityPyramid(leftImage,rightImage,4,method='ncc')
+harriscornerimage = HarrisCorner(leftImage,True)
+harriscornerimage = HarrisCorner(rightImage,True)
+
+matchFeaturesTwoImages(leftImage,rightImage)
+#disparityPyramid(leftImage,rightImage,4,method='ncc')
 #displayImageGivenArray(disparity2(leftImage,rightImage,templateSize=3,windowSize=25,stepSize=1),windowTitle='Disparity Image',waitKey=0)
 #displayImageGivenArray(disparity2(leftImage,rightImage,templateSize=3,windowSize=50,stepSize=1),windowTitle='Disparity Image',waitKey=0)
 #displayImageGivenArray(disparity2(leftImage,rightImage,templateSize=11,windowSize=100,stepSize=1),windowTitle='Disparity Image',waitKey=0)
@@ -811,7 +844,9 @@ disparityPyramid(leftImage,rightImage,4,method='ncc')
 #displayImageGivenArray(disparity(leftImage,rightImage,templateSize=3,windowSize=30,stepSize=1,method='sad',useCV2Instead=True),windowTitle='SAD Disparity Image')
 
 #Works for SSD:
-#displayImageGivenArray(disparity(leftImage,rightImage,templateSize=11,windowSize=100,stepSize=1,method='ssd',useCV2Instead=True),windowTitle='SSD Disparity Image')
+#displayImageGivenArray(disparity(leftImage,rightImage,templateSize=3,windowSize=100,stepSize=1,method='ssd',useCV2Instead=True),windowTitle='SSD Disparity Image')
+#displayImageGivenArray(disparity(leftImage,rightImage,templateSize=9,windowSize=100,stepSize=1,method='ssd',useCV2Instead=True),windowTitle='SSD Disparity Image') #Looks good
+displayImageGivenArray(disparity(leftImage,rightImage,templateSize=15,windowSize=300,stepSize=1,method='ssd',useCV2Instead=True),windowTitle='SSD Disparity Image')
 
 #Works for NCC: (Takes a while to finish running so I use CV2 instead)
 #displayImageGivenArray(disparity(leftImage,rightImage,templateSize=11,windowSize=100,stepSize=1,method='ncc',useCV2Instead=True),windowTitle='NCC Disparity Image',waitKey=0)
