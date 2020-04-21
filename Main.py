@@ -9,6 +9,8 @@ feature-based, region-based and multiresolution matching. The program should be 
 perform multi-resolution stereo analysis, where the no. of levels are set by the user.
 The template and search neighborhood at each level can be set differently by the user,
 so is the method and matching measure to be used
+
+Note: I used the actual CV2 SSD, NCC methods since they are far more efficent but I did create my own as well and produce the same values
 '''
 
 import numpy as np
@@ -16,12 +18,47 @@ import cv2
 import os
 import math
 import tkinter
+from scipy import ndimage
+
 from tkinter import filedialog
 
-
+a = np.array([[13, 21, 13,  8],
+              [ 5, 10, 22, 14],
+              [21, 33,  9,  0],
+              [ 0,  0,  0,  0]], dtype=np.float)
 
 IMAGEDIR = './input_images/'
 
+
+
+def neighborhoodAverage(array,kernelSize:int=3):
+    result = ndimage.generic_filter(array, np.nanmean, size=kernelSize, mode='constant', cval=np.NaN)
+    print(result)
+    return result
+
+
+
+def neighborhoodAverage2(array,point,kernelSize:int=3):
+    halfKernelSize = int((kernelSize-1)/2)
+    centerpoint = point
+    x = centerpoint[0]
+    y = centerpoint[1]
+
+    array_width = array.shape[1]
+    array_height = array.shape[0]
+
+    print(array.shape)
+
+    startRow = max(0, y - halfKernelSize)
+    startColumn = max(0, x - halfKernelSize)
+    endRow = min(array_height - 1, y + halfKernelSize)
+    endColumn = min(array_width - 1, x + halfKernelSize)
+
+    window = array[startRow:endRow+1,startColumn:endColumn+1]
+    array[y][x] = window.mean()
+
+# neighborhoodAverage2(a,(0,0),3)
+# print(a)
 
 
 #Searches a list of strings and looks for specified image name (string)
@@ -112,57 +149,13 @@ def browseImagesDialog(startindirectory:str=os.getcwd(),MessageForUser='Please s
     return filepath
 
 
-def getUserInputDimension():
+def getUserInputDimension(message = "Enter a template size: EX: '3'"):
     #print("Enter your window size:(EX:'5x5')")
-    print("Enter a size input: EX: '50x100' to get a 50 by 100 image")
+    print(message)
     userinput = input()
-    StringDimension = userinput.split("x")
-
-    try:
-        if(len(StringDimension)!=2):
-            raise Exception("Not a dimension!")
-        elif(len(StringDimension)==2and StringDimension[0].isdigit() and StringDimension[1].isdigit()):
-            width = int(StringDimension[0])
-            height = int(StringDimension[1])
-            dimensions = (width,height)
-            print(dimensions)
-            return dimensions
-    except:
-        print("Error! Inputted Dimension was not in the form: '<width>x<height>'")
-
-def getIndexesGTEElement(array,element):
-    indexes = np.where(array >= element)
-    points = list(zip(indexes[0], indexes[1]))
-    return points
-
-def getIndexesLTEElement(array,element):
-    indexes = np.where(array <= element)
-    points = list(zip(indexes[0], indexes[1]))
-    return points
-
-def getIndexesForGivenElement(array,element):
-    indexes = np.where(array == element)
-    points = list(zip(indexes[0], indexes[1]))
-    return points
-
-#More efficient SAD using numpy
-def SAD2(I,T):
-    template_height = T.shape[1]
-    template_width = T.shape[0]
-
-    if (isinstance(I[0][0], np.ndarray) or isinstance(I[0][0], list)):
-        isColorImage = True
-        print("THIS IS A COLOR IMAGE")
-
-
-    else:
-        isColorImage = False
-        print("THIS IS A GRAYSCALE IMAGE")
-        currentTemplateLayedOverImage =np.lib.stride_tricks.as_strided(I,shape=(I.shape[0]-template_height+1,I.shape[1]-template_width+1,template_height,template_width),strides=I.strides*2)
-        foundSADValues = abs(currentTemplateLayedOverImage-T).sum(axis=-1).sum(axis=-1)
-        return foundSADValues
-
-    return I
+    if(userinput.isdigit()):
+        print('Entered size:'+userinput)
+        return int(userinput)
 
 def drawRectangleOnImage(I,topLeftPoint,dimension):
     # print(I)
@@ -184,23 +177,6 @@ def cv2SSD(I,T):
     ssd = cv2.matchTemplate(I, T, cv2.TM_SQDIFF)
     return ssd
 
-
-def SSD(I,T):
-    template_height = T.shape[1]
-    template_width = T.shape[0]
-
-    window =np.lib.stride_tricks.as_strided(I,shape=(I.shape[0]-template_height+1,I.shape[1]-template_width+1,template_height,template_width),strides=I.strides*2)
-    ssd = np.power(T-window,2).sum(axis=-1).sum(axis=-1)
-    #print(ssd)
-    return ssd
-
-def SAD(I,T):
-    template_height = T.shape[1]
-    template_width = T.shape[0]
-
-    window =np.lib.stride_tricks.as_strided(I,shape=(I.shape[0]-template_height+1,I.shape[1]-template_width+1,template_height,template_width),strides=I.strides*2)
-    sad = abs(window-T).sum(axis=-1).sum(axis=-1)
-    return sad
 
 #threshold is between [0,255], to get good points use ~200
 def HarrisCorner2(I, threshold:int=200, displayImage:bool=False):
@@ -237,7 +213,7 @@ def HarrisCorner(I,displayImage:bool=False):
     corners2 = cv2.dilate(corners, None, iterations=3)
     print(corners2)
 
-    indexes = np.where(corners2>(0.01*corners2.max()))
+    indexes = np.where(corners2>(0.005*corners2.mean()))
     points = list(zip(indexes[0], indexes[1]))
     print(indexes)
 
@@ -255,10 +231,11 @@ def HarrisCorner(I,displayImage:bool=False):
 
     return points
 
-def matchFeaturesTwoImages(leftImage,rightImage,windowSize:int=10):
-    leftImageColored = cv2.cvtColor(leftImage,cv2.COLOR_GRAY2RGB)
-    rightImageColored = cv2.cvtColor(rightImage,cv2.COLOR_GRAY2RGB)
 
+#Uses Harris Corner to find points in both the left and right images individually
+#Loops through all left image points and uses region SSD,SAD,or NCC to find corresponding point
+#(Note: takes a long time to run)
+def featureBasedMethod(leftImage,rightImage,templateSize:int=3,windowFeatureSize:int=4,windowRegionSize:int=50,method='ssd'):
     pointsLeftImage = HarrisCorner(leftImage)
     print("Left Points:")
     print(pointsLeftImage)
@@ -266,102 +243,157 @@ def matchFeaturesTwoImages(leftImage,rightImage,windowSize:int=10):
     print("Right Points:")
     print(pointsRightImage)
 
-    # Initiate ORB detector
-    orb = cv2.ORB_create()
+    disparityImage = np.zeros_like(leftImage,np.float32)
 
-    print("LEFT IMAGE:")
-    print(len(leftImage.shape))
+    #Matching left points to right points and then checking for similarity using
+    currentRow = pointsLeftImage[0][0]
+    image_width = leftImage.shape[1]
+    image_height = leftImage.shape[0]
 
-    # find the keypoints and descriptors with ORB
-    kp1, des1 = orb.detectAndCompute(leftImageColored, None)
-    kp2, des2 = orb.detectAndCompute(rightImageColored, None)
+    halfTemplateSize = int((templateSize-1)/2)
 
-    # create BFMatcher object
-    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    startRightPoints=0
+    for leftpoint in pointsLeftImage:
+        centerpoint = leftpoint
+        leftx = centerpoint[1]
+        lefty = centerpoint[0]
+
+        if (lefty != currentRow):
+            currentRow = lefty+1
+
+        startRow = max(0, lefty - halfTemplateSize)
+        startColumn = max(0, leftx - halfTemplateSize)
+        endRow = min(image_height - 1, lefty + halfTemplateSize)
+        endColumn = min(image_width - 1, leftx + halfTemplateSize)
+
+        #Constructs a template region area around the point in the left image
+        template = leftImage[startRow:endRow+1,startColumn:endColumn+1]
+
+        for i in range(startRightPoints,len(pointsRightImage)):
+            rightpoint = pointsRightImage[len(pointsRightImage)-1]
+            rightx = rightpoint[1]
+            righty = rightpoint[0]
 
 
-    #Match descriptors.
-    matches = bf.match(des1, des2)
+            if(righty!=lefty):
+                break
 
-    #Sort them in the order of their distance.
-    matches = sorted(matches, key=lambda x: x.distance)
+            startWindowRow = lefty
+            halfWindowSize = int((windowFeatureSize-1)/2)
+            startWindowColumn = max(0, rightx-halfWindowSize)
+            endWindowRow = min(image_height - 1, lefty + halfTemplateSize)
+            endWindowColumn = min(image_width - 1, rightx + halfWindowSize)
 
-    leftImageuint8 = cv2.convertScaleAbs(leftImage)
-    rightImageuint8 = cv2.convertScaleAbs(rightImage)
+            window = rightImage[startWindowRow:endWindowRow+1,startWindowColumn:endWindowColumn+1]
 
-    print("MATCHES:")
-    img3 = cv2.drawMatches(leftImageuint8, kp1, rightImageuint8, kp2, matches[:10],None,flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
-    displayImageGivenArray(img3,windowTitle='MATCHES')
+            correspondingValues = None
+            if(method.lower()=='ssd'):
+                correspondingValues = cv2SSD(window,template)
 
-def getSumOfAbsoluteDifferences(image1Array:np.ndarray,image2Array:np.ndarray):
-    return
+            elif(method.lower()=='ncc'):
+                correspondingValues = cv2SSD(window, template)
 
-def getNSmallestValues(array,n:int):
-    flattentedarray = array.flatten()
-    print("SMALLEST:"+str(flattentedarray))
+            else:
+                correspondingValues = SAD1D(window,template)
 
-    return np.partition(flattentedarray,n)
+            print("CORRESPONDING VALUES:"+str(correspondingValues))
+            minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(correspondingValues)
 
-def getNLargestValues(array,n:int):
-    flattentedarray = array.flatten()
-    print(np.partition(flattentedarray,-n)[-n:])
-    return np.partition(flattentedarray,-n)[-n:]
+            correspondingRightX = startWindowColumn+minLoc[0]
+            print("RIGHT X:"+str(correspondingRightX))
 
-def drawRectanglesAtGivenPointsTemplate(I,points,template):
-    for point in points:
-        drawRectangleOnImageGivenTemplate(I,point,template)
-    return I
+            disparityValue = leftx-correspondingRightX
+            print(disparityValue)
+            disparityImage[lefty][leftx]=disparityValue
 
-# def LetUserChooseMatchingScore(I,T):
-#     useroption = ""
+    #Once finished going through all feature points, uses normal region based disparity to fill the rest
+    disparityImage= disparity(leftImage, rightImage,
+                  templateSize= templateSize, windowSize=windowRegionSize, stepSize= 1, method = method, useCV2Instead = True, validityCheck = False, existingDisparityImage = disparityImage)
+
+    displayImageGivenArray(disparityImage,windowTitle='Finished Feautre Based Disparity')
+    return disparityImage
+
+
+# def drawRectanglesAtGivenPointsTemplate(I,points,template):
+#     for point in points:
+#         drawRectangleOnImageGivenTemplate(I,point,template)
 #
-#     selectingOption = True
-#
-#     while(useroption!='exit'):
-#         if(selectingOption):
-#             print("Select which matching score technique to use:\n"
-#                   "1)SAD\n"
-#                   "2)SSD\n"
-#                   "3)NCC\n"
-#                   "(enter the digit)")
-#             useroption = input()
-#
-#             if(useroption.isdigit()==False):
-#                 print("Invalid option! (needs to be a digit: 1,2,3)")
-#             else:
-#                 if(useroption=="1"):
-#                     print("You selected SAD")
-#                     amountofvalues = 50
-#
-#                     foundSADValues = SAD(I,T)
-#                     smallestSADvalues = getNSmallestValues(foundSADValues, amountofvalues)
-#                     points = getIndexesLTEElement(foundSADValues, smallestSADvalues[amountofvalues-1])
-#
-#                     displayImageGivenArray(drawRectanglesAtGivenPointsTemplate(I, points, T), windowTitle='SAD')
-#
-#                 elif(useroption=="2"):
-#                     print("You selected SSD")
-#                     amountofvalues = 1
-#
-#                     foundSSDValues = SSD(I,T)
-#                     smallestSSDvalues = getNSmallestValues(foundSSDValues, amountofvalues)
-#                     points = getIndexesLTEElement(foundSSDValues, smallestSSDvalues[amountofvalues-1])
-#
-#                     displayImageGivenArray(drawRectanglesAtGivenPointsTemplate(I, points, T), windowTitle='SSD')
-#                 elif(useroption=="3"):
-#                     print("You selected NCC")
-#                     amountofvalues = 1
-#
-#                     foundNCCValues = NCC(I,T)
-#                     biggestNCCvalues = getNLargestValues(foundNCCValues, amountofvalues)
-#                     print(biggestNCCvalues)
-#
-#                     #points = getIndexesLTEElement(foundNCCValues, biggestNCCvalues[amountofvalues-1])
-#                     points = getIndexesForGivenElement(foundNCCValues,np.amax(foundNCCValues))
-#
-#                     print("DISPLAYING")
-#                     displayImageGivenArray(drawRectanglesAtGivenPointsTemplate(I, points, T), windowTitle='NCC')
-#                 break
+#     return I
+
+
+
+#Lets the user choose images, template size, window size, and which methods to use
+def LetUserChoose():
+    valueTechnique = ""
+    method=""
+    leftImagePath = ""
+    rightImagePath = ""
+    # leftImage = None
+    # rightImage = None
+
+
+    selectingOption = True
+
+    while(valueTechnique!='exit' or method!='exit'):
+        if(selectingOption):
+            templateSize = getUserInputDimension('Enter a template size:(1 digit)')
+            windowSize = getUserInputDimension('Enter a window size:(1 digit)')
+
+            print("Select method type:\n1)Region Based(Template,Windows)"
+                  "\n2)Feature Based(Harris Corner)")
+
+            method = input()
+
+            print("Select which matching score technique to use:\n"
+                  "1)SAD\n"
+                  "2)SSD\n"
+                  "3)NCC\n"
+                  "(enter the digit)")
+            valueTechnique = input()
+
+            leftImagePath = browseImagesDialog(IMAGEDIR,'Select your left image')
+            rightImagePath = browseImagesDialog(IMAGEDIR,'Select your right image')
+            # leftImagePath = getImageFromListOfImages(listOfImages, 'scene1.row3.col1')
+            # rightImagePath = getImageFromListOfImages(listOfImages, 'scene1.row3.col5')
+
+            # Returns the images as float 32 (but need to normalize to get them to between [0,1]
+            leftImage = getImageArray(leftImagePath, intensitiesOnly=True).astype(np.float32)
+            rightImage = getImageArray(rightImagePath, intensitiesOnly=True).astype(np.float32)
+            leftImage = leftImage / 128
+            rightImage = rightImage / 128
+
+            if(valueTechnique.isdigit()==False):
+                print("Invalid option! (needs to be a digit: 1,2,3)")
+
+            if (method.isdigit() == False):
+                print("Invalid option! (needs to be a digit: 1,2)")
+            else:
+                if(valueTechnique=="1"):
+                    print("You selected SAD")
+
+                    if(method=='2'):
+                        displayImageGivenArray(featureBasedMethod(leftImage,rightImage,templateSize,4,windowSize,'sad'),windowTitle='SAD|TemplateSize:'+str(templateSize)+"|WindowSize:"+str(windowSize))
+                    else:
+                        displayImageGivenArray(disparity(leftImage,rightImage,templateSize,windowSize,1,'sad',True,False,None),windowTitle='SAD|TemplateSize:'+str(templateSize)+"|WindowSize:"+str(windowSize))
+
+
+                elif(valueTechnique=="2"):
+                    print("You selected SSD")
+
+                    if (method == '2'):
+                        displayImageGivenArray(featureBasedMethod(leftImage, rightImage, templateSize, 4, windowSize, 'ssd'),windowTitle='SSD|TemplateSize:'+str(templateSize)+"|WindowSize:"+str(windowSize))
+                    else:
+                        displayImageGivenArray(disparity(leftImage, rightImage, templateSize, windowSize, 1, 'ssd', True, False, None),windowTitle='SSD|TemplateSize:'+str(templateSize)+"|WindowSize:"+str(windowSize))
+
+                elif(valueTechnique=="3"):
+                    print("You selected NCC")
+
+                    if (method == '2'):
+                        displayImageGivenArray(featureBasedMethod(leftImage, rightImage, templateSize, 4, windowSize, 'ncc'),windowTitle='NCC|TemplateSize:'+str(templateSize)+"|WindowSize:"+str(windowSize))
+                    else:
+                        displayImageGivenArray(disparity(leftImage, rightImage, templateSize, windowSize, 1, 'ncc', True, False, None),windowTitle='NCC|TemplateSize:'+str(templateSize)+"|WindowSize:"+str(windowSize))
+
+                break
 
 
 def slidingWindow(I,windowSize:int=3,stepSize:int=1,keepSlidingWindowWithinImage:bool=False):
@@ -420,6 +452,7 @@ def slidingWindow(I,windowSize:int=3,stepSize:int=1,keepSlidingWindowWithinImage
     print(AllWindows)
 
 
+#SSD calculation method for region based
 def SSD1D(I,T,stepSize:int=1,keepSlidingWindowWithinImage:bool=False):
     image_height =I.shape[0]
     image_width =I.shape[1]
@@ -450,6 +483,7 @@ def SSD1D(I,T,stepSize:int=1,keepSlidingWindowWithinImage:bool=False):
             correspondenceValues.append(correspondence)
     return correspondenceValues
 
+#SAD calculation method for region based
 def SAD1D(I,T,stepSize:int=1,keepSlidingWindowWithinImage:bool=False):
     image_height =I.shape[0]
     image_width =I.shape[1]
@@ -476,6 +510,7 @@ def SAD1D(I,T,stepSize:int=1,keepSlidingWindowWithinImage:bool=False):
 
     return correspondenceValues
 
+#NCC1D calculation method for region based
 def NCC1D(I,T,stepSize:int=1,keepSlidingWindowWithinImage:bool=False):
     image_height =I.shape[0]
     image_width =I.shape[1]
@@ -511,20 +546,36 @@ def NCC1D(I,T,stepSize:int=1,keepSlidingWindowWithinImage:bool=False):
 
     return correspondenceValues
 
-
-def disparity(left,right,templateSize:int=3,windowSize:int=5,stepSize:int=1,method='SSD', useCV2Instead=True):
+#Region Based method:
+#Uses template and window matching to find corresponding points
+#Creates a disparity map image showcasing depth of left and right images
+def disparity(left,right,templateSize:int=3,windowSize:int=5,stepSize:int=1,method='SSD', useCV2Instead=True,validityCheck=False,existingDisparityImage=None):
     image_height =left.shape[0]
     image_width =left.shape[1]
 
-    halfTemplateSize = int(templateSize/2)
-    disparityImage8 = np.zeros_like(left)
-    disparityImage = np.zeros_like(left).astype(np.float32)
+    halfTemplateSize = int((templateSize-1)/2)
+
+    disparityImage = None
+
+    if(existingDisparityImage!=None):
+        disparityImage = existingDisparityImage
+    else:
+        # stores all of the disparities and places them in the left image i,j locations
+        disparityImage = np.zeros_like(left).astype(np.float32)
+
+    #Keeps all of the disparities and should place disparity values in the left image i,j locations
+    validityDisparityImage =np.zeros_like(left).astype(np.float32)
 
     print("Started method:"+method)
+
 
     for r in range(0,image_height,stepSize):
         print("Finished y:"+(str(r)))
         for c in range(0,image_width,stepSize):
+            #Continues if an existing disparity map image was given
+            if(disparityImage[r][c]!=0):
+                continue
+
             #print("CURR:"+str((r,c)))
 
             #Ensures that the indexes are within the image
@@ -533,18 +584,18 @@ def disparity(left,right,templateSize:int=3,windowSize:int=5,stepSize:int=1,meth
             endRow = min(image_height-1,r+halfTemplateSize)
             endColumn = min(image_width-1,c+halfTemplateSize)
 
-            windowStart = max(0, c - int(windowSize / 2))
-            windowEnd = min(image_width, c + int((windowSize) / 2))
+            windowStart = max(0, c - int((windowSize-1) / 2))
+            windowEnd = min(image_width, c + int((windowSize-1) / 2))
 
             window = right[startRow:endRow + 1, windowStart:windowEnd + 1].astype(np.float32) # gets the entire width*templateHeight row in the right image
-            #window = (window - np.mean(window))/(window-)
-
             #Using the start,end indexes, indexing the window out:
-            template = left[startRow:endRow+1,startColumn:endColumn].astype(np.float32)
+            template = left[startRow:endRow+1,startColumn:endColumn+1].astype(np.float32)
 
-
-            #print("SSD WINDOW")
-            #print(window)
+            validityTemplate = None
+            validityWindow = None
+            if(validityCheck):
+                validityTemplate = right[startRow:endRow+1,startColumn:endColumn+1].astype(np.float32)
+                validityWindow = left[startRow:endRow + 1, windowStart:windowEnd + 1].astype(np.float32)
 
             if (template.shape[0]!=window.shape[0]):
                 raise Exception("TEMPLATE HEIGHT!=WINDOW HEIGHT")
@@ -552,13 +603,29 @@ def disparity(left,right,templateSize:int=3,windowSize:int=5,stepSize:int=1,meth
             windowValues = None
             correspondingValues = None
 
+            validityWindowValues = None
+            validityCorrespondingValues = None
+            ValiditycorrespondingXinRight = -1
+
             if(method.lower()=='ssd'):
                 #print("COMPARING")
 
                 if(useCV2Instead):
                     windowValues = np.array(cv2SSD(window, template))
+
+                    if(validityCheck):
+                        validityWindowValues = np.array(cv2SSD(validityWindow,validityTemplate))
+                        ValidityminVal, ValiditymaxVal, ValidityminLoc, ValiditymaxLoc = cv2.minMaxLoc(validityWindowValues)
+                        ValiditycorrespondingXinRight = np.arange(correspondingValues.shape[1])[ValidityminLoc[0]]
                 else:
                     windowValues = np.array([SSD1D(window, template, keepSlidingWindowWithinImage=True)])
+
+                    if (validityCheck):
+                        validityWindowValues = np.array([SSD1D(validityWindow, validityTemplate, keepSlidingWindowWithinImage=True)])
+                        ValidityminVal, ValiditymaxVal, ValidityminLoc, ValiditymaxLoc =cv2.minMaxLoc(validityWindowValues)
+                        ValiditycorrespondingXinRight = np.arange(correspondingValues.shape[1])[ValidityminLoc[0]]
+
+
 
 
                 minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(windowValues)
@@ -571,6 +638,14 @@ def disparity(left,right,templateSize:int=3,windowSize:int=5,stepSize:int=1,meth
 
                 #print("COMPARING")
                 windowValues = np.array([SAD1D(window, template, keepSlidingWindowWithinImage=True)])
+
+
+
+                if(validityCheck):
+                    validityWindowValues = np.array([SAD1D(validityWindow, validityTemplate, keepSlidingWindowWithinImage=True)])
+                    ValidityminVal, ValiditymaxVal, ValidityminLoc, ValiditymaxLoc = cv2.minMaxLoc(validityWindowValues)
+                    ValiditycorrespondingXinRight =np.arange(validityWindowValues.shape[1])[ValidityminLoc[0]]
+
                 # windowValues = np.array(cv2SSD(window, template))
 
                 minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(windowValues)
@@ -581,40 +656,57 @@ def disparity(left,right,templateSize:int=3,windowSize:int=5,stepSize:int=1,meth
             elif(method.lower()=='ncc'):
                 if(useCV2Instead):
                     windowValues = np.array(cv2NCC(window,template))
+
+                    if (validityCheck):
+                        validityWindowValues = np.array(cv2NCC(validityWindow, validityTemplate))
+                        ValidityminVal, ValiditymaxVal, ValidityminLoc, ValiditymaxLoc = cv2.minMaxLoc(validityWindowValues)
+                        ValiditycorrespondingXinRight = np.arange(validityWindowValues.shape[1])[ValidityminLoc[0]]
                 else:
                     windowValues = np.array([NCC1D(window, template, keepSlidingWindowWithinImage=True)])
 
+                    if (validityCheck):
+                        validityWindowValues = np.array([NCC1D(validityWindow, validityTemplate, keepSlidingWindowWithinImage=True)])
+                        ValidityminVal, ValiditymaxVal, ValidityminLoc, ValiditymaxLoc =cv2.minMaxLoc(validityWindowValues)
+                        ValiditycorrespondingXinRight = np.arange(validityWindowValues.shape[1])[ValiditymaxLoc[0]]
+
                 minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(windowValues)
-                correspondingXinRight = windowStart+maxLoc[0]
+                correspondingXinRight = windowStart + minLoc[0]
             else:
                 print("Did not select a method!(SAD,SSD,NCC)")
 
-
-
-
-
-
-            #print("X LEFT:"+str(c))
-            #print("X RIGHT:"+str(correspondingXinRight))
-            #print("MAX:")
-
-            # print("leftx:"+str(c))
-            # print("rightx:"+str(correspondingXinRight))
-
-            #disparityValue = abs(correspondingXinRight-c) #Subtract right image location x by left image location x
             disparityValue = c-correspondingXinRight # Subtract left image x from right image x
+            validityDisparityValue = c-ValiditycorrespondingXinRight
             #print("DISPARITY VALUE:" + str(disparityValue))
             disparityImage[r][c]=int(disparityValue)
+            validityDisparityImage[r][ValiditycorrespondingXinRight]=int(validityDisparityValue) #Places the disparity values on the right image rather than the right image so we can compare values vs left disparity image
 
 
+    if(validityCheck):
+        absoluteDifferenceDisparityImage = np.abs(disparityImage)-np.abs(validityDisparityImage)
+        print("ABSOLUTE DIFF DISPARITY IMAGE:")
+        print(absoluteDifferenceDisparityImage)
+
+        indexesWhereNotEqual = np.where(absoluteDifferenceDisparityImage!=0)
+        unequalPoints = list(zip(indexesWhereNotEqual[0], indexesWhereNotEqual[1]))
+        print("POINTS WHERE NOT THE SAME:")
+        print(unequalPoints)
+        print(len(unequalPoints))
+        #exit(0)
+
+        indexesWhereEqual = np.where(absoluteDifferenceDisparityImage == 0)
+        equalPoints = list(zip(indexesWhereEqual[0], indexesWhereEqual[1]))
+        print("POINTS WHERE THE SAME:")
+        print(equalPoints)
+        print(len(equalPoints))
+
+        #for point in equalPoints:
+        #    disparityImage[point[0]][point[1]]=128
+
+        print(disparityImage[15][10])
+        print(validityDisparityImage[15][10])
 
 
-
-    # print(disparityImage)
-    # print(disparityImage.max())
-    # print(disparityImage.min())
-
-    #disparityImage = disparityImage+abs(disparityImage.min()) #shifts disparity values so that they are all 0 minimum
+    #Normalizes values so that they are all within [0,1]
     normalized = disparityImage * (1/disparityImage.max())
     return normalized
 
@@ -638,16 +730,12 @@ def propogateDisparityMap(disparitymap):
     print(newSize)
     print("FDSKFLJSDFK")
 
-    disparitymap = cv2.resize(disparitymap,newSize,interpolation=cv2.INTER_CUBIC)
+    disparitymap = cv2.resize(disparitymap,newSize,interpolation=cv2.INTER_AREA)
 
-    #Normalize:
-
-    normalized = disparitymap * (1 / disparitymap.max())
-
-    return normalized
+    return disparitymap
 
 
-
+#Uses gaussian pyramids of images to generate a smoother disparity map image
 def disparityPyramid(left, right, levels,method='ssd'):
     leftG = left.copy()
     rightG = right.copy()
@@ -666,18 +754,52 @@ def disparityPyramid(left, right, levels,method='ssd'):
 
     print("LEFT LEVELS:"+str(len(leftGaussianPyramid)))
 
+    #Gets the top level gaussian images from both left and right image
     topLevelLeft = leftGaussianPyramid[len(leftGaussianPyramid)-1]
     topLevelRight = rightGaussianPyramid[len(rightGaussianPyramid) - 1]
 
+    displayImageGivenArray(topLevelLeft,windowTitle='TOP LEVEL LEFT')
+    displayImageGivenArray(topLevelRight,windowTitle='TOP LEVEL RIGHT')
 
+
+    #Check validates (gets LeftToRight disparity map, and RightToLeft disparity map and compares)
+    #Places 0s where disparity values do not match:
     disparityPyramid = []
-    topLevelDisparity = disparity(topLevelLeft, topLevelRight,templateSize=3,windowSize=12,stepSize=1,method=method)
-    displayImageGivenArray(topLevelDisparity,windowTitle='TOP LEVEL DISPARITY')
-    np.set_printoptions(threshold=np.inf)
-    #print("TOP LEVEL DISPARITY:")
-    #print(topLevelDisparity)
+    topLevelLeftToRightDisparity = disparity(topLevelLeft, topLevelRight,templateSize=3,windowSize=50,stepSize=1,method=method)
+    displayImageGivenArray(topLevelLeftToRightDisparity,windowTitle='Disparity Map:Left to Right')
+    #topLevelRightToLeftDisparity = disparity(topLevelLeft, topLevelRight, templateSize=3, windowSize=12, stepSize=1,method=method)
+    topLevelDisparity = topLevelLeftToRightDisparity
+    #topLevelDisparity = checkDisparityImagesValidity(topLevelLeftToRightDisparity, topLevelRightToLeftDisparity)
 
-    #print("DOUBLED DISPARITY VALUES:")
+    #Neighborhood averaging (Fills in 0s with average neighborhood):
+    print("TOP LEVEL SHAPE:"+str(topLevelDisparity.shape))
+    #topLevelDisparity = neighborhoodAverage(topLevelDisparity,3) #3 kernel size
+    zeroIndexes = np.where((topLevelDisparity <=0.2))
+    oneIndexes = np.where((topLevelDisparity>=0.6))
+    allIndexes = zeroIndexes+oneIndexes
+    allIndexes = list(zip(allIndexes[1], allIndexes[0]))
+    print(allIndexes)
+    for point in allIndexes:
+        x = point[0]
+        y = point[1]
+
+        print("VALUE BEFORE:"+str(topLevelDisparity[y][x]))
+
+        neighborhoodAverage2(topLevelDisparity,point,15)
+
+        print("VALUE AFTER:"+str(topLevelDisparity[y][x]))
+        print("AVERAGING")
+
+
+
+
+
+    displayImageGivenArray(topLevelDisparity,windowTitle='Neighborhood averaged:')
+    print("NEIGHBORHOOD SHAPE:"+str(topLevelDisparity.shape))
+
+    np.set_printoptions(threshold=np.inf)
+
+    #Goes through each disparity level and propogates disparity map
     currLevelDisparity = topLevelDisparity
     disparityPyramid.append(currLevelDisparity)
     for i in range(levels-1):
@@ -687,12 +809,27 @@ def disparityPyramid(left, right, levels,method='ssd'):
 
 
 
+    #Normalize:
+    fullsizeDisparityImage = disparityPyramid[len(disparityPyramid)-1]
+    normalized = fullsizeDisparityImage * (1 / fullsizeDisparityImage.max())
+
+
     print("DISPARITY PYRAMID LEVELS:"+str(len(disparityPyramid)))
-    displayImageGivenArray(disparityPyramid[len(disparityPyramid)-1])
+    displayImageGivenArray(normalized,windowTitle='Finished Disparity Image:',waitKey=10000)
+
+    return normalized
 
 
-
-
+#Method used for checking disparity between methods
+def checkDisparityImagesValidity(disparityimage1,disparityimage2):
+    validityDisparityImage = np.zeros(disparityimage1.shape,dtype=disparityimage1.dtype)
+    for i in np.arange(disparityimage1.shape[0]):
+        for j in np.arange(disparityimage1.shape[1]):
+            if(disparityimage1[i][j]==disparityimage2[i][j]):
+                validityDisparityImage[i][j] = disparityimage1[i][j]
+            else:
+                validityDisparityImage[i][j] = 0
+    return validityDisparityImage
 
 
 ExampleTemplate = np.array([
@@ -732,17 +869,16 @@ ExampleImage32 = np.array([
                     [8, 4, 6, 8, 5, 2, 7, 7, 5, 9]
                 ],dtype=np.uint8)
 
-leftToRight = disparity(ExampleImage3,ExampleImage32,3,15)
+#leftToRight = disparity(ExampleImage3,ExampleImage32,3,15)
 #displayImageGivenArray(leftToRight)
-rightToLeft = disparity(ExampleImage32,ExampleImage3,3,15)
+#rightToLeft = disparity(ExampleImage32,ExampleImage3,3,15)
 #displayImageGivenArray(rightToLeft)
 
 print("LEFT TO RIGHT:")
-print(leftToRight)
+#print(leftToRight)
 
 print("RIGHT TO LEFT:")
-print(rightToLeft)
-exit(0)
+#print(rightToLeft)
 
 
 ExampleImage2 = np.array([
@@ -753,51 +889,17 @@ ExampleImage2 = np.array([
 #slidingWindow(ExampleImage,3,1,keepSlidingWindowWithinImage=True)
 
 listOfImages = getAllImagesFromInputImagesDir(IMAGEDIR, getabspaths=True)
-#print(listOfImages)
-stopsignimage = getImageArray(getImageFromListOfImages(listOfImages,'stopsign'),True)
-streetimage = getImageArray(getImageFromListOfImages(listOfImages,'street'),True)
 
 
 #Sets up tkinter root windows and closed it (only need it for user browsing)
 root = tkinter.Tk()
 root.withdraw()
 
-#print("Browse and pick a template image")
-#templatepath = browseImagesDialog(MessageForUser='Select your Template (Foreground)')
-# #template = getImageArray(templatepath,True)
-# template = stopsignimage
-# templateOriginalSize = (template.shape[1],template.shape[0])
-# print("Displaying your template image, size:"+str(templateOriginalSize))
-#
-# displayImageGivenArray(template, windowTitle='Template:',waitKey=0)
-
-
 #Method1: Sliding Template T(x,y) across an Image I(x,y)
 #We then want to get 'matches' for the template on the image itself
 #print("Enter a desired size for your template image:")
 #templateSize = getUserInputDimension()
 #templateSize = (10,10)
-#template = ScaleByGivenDimensions(template,templateSize)
-#displayImageGivenArray(template,windowTitle='Template(resized):',waitKey=0)
-
-#print("\n\n")
-
-#print("Pick your matching window image:")
-#imagepath = browseImagesDialog(MessageForUser='Select your Template (Foreground)')
-#image = getImageArray(imagepath,True)
-image = streetimage
-# print("IMAGE:")
-# print(image)
-# imageoriginalsize = (image.shape[1],image.shape[0])
-# print("Displaying your matching window image, size:"+str(imageoriginalsize))
-#displayImageGivenArray(image,waitKey=0)
-
-
-#Performs harris corner on the image to detect corners
-harriscornerimage = HarrisCorner(image,True)
-
-#Lets the user pick which matching score they want to use:
-#LetUserChooseMatchingScore(image,template)
 
 #leftImagePath = browseImagesDialog(IMAGEDIR,'Select your left image')
 #rightImagePath = browseImagesDialog(IMAGEDIR,'Select your right image')
@@ -811,42 +913,24 @@ leftImage = leftImage/128
 rightImage = rightImage/128
 #----------------------
 
-#exit(0)
 
 
-#displayImageGivenArray(leftImage,windowTitle='Left Image',waitKey=0)
-#displayImageGivenArray(rightImage,windowTitle='Right Image',waitKey=0)
 
-print("--------")
-print(NCC1D(ExampleImage,ExampleTemplate,keepSlidingWindowWithinImage=True))
-print(cv2NCC(ExampleImage,ExampleTemplate))
-#exit(0)
 
-print(SSD1D(ExampleImage,ExampleTemplate,keepSlidingWindowWithinImage=True))
-#SSD1D(ExampleImage2,ExampleTemplate2,keepSlidingWindowWithinImage=True)
-#NCC1D(ExampleImage,ExampleTemplate3,keepSlidingWindowWithinImage=True)
+#Allows user to pick their images
+LetUserChoose()
 
-#newSAD(leftImage,ExampleTemplate)
-displayImageGivenArray(leftImage)
-displayImageGivenArray(rightImage)
-
+#Harris Corner:
 harriscornerimage = HarrisCorner(leftImage,True)
 harriscornerimage = HarrisCorner(rightImage,True)
 
-matchFeaturesTwoImages(leftImage,rightImage)
-#disparityPyramid(leftImage,rightImage,4,method='ncc')
-#displayImageGivenArray(disparity2(leftImage,rightImage,templateSize=3,windowSize=25,stepSize=1),windowTitle='Disparity Image',waitKey=0)
-#displayImageGivenArray(disparity2(leftImage,rightImage,templateSize=3,windowSize=50,stepSize=1),windowTitle='Disparity Image',waitKey=0)
-#displayImageGivenArray(disparity2(leftImage,rightImage,templateSize=11,windowSize=100,stepSize=1),windowTitle='Disparity Image',waitKey=0)
-#displayImageGivenArray(disparity2(leftImage,rightImage,templateSize=15,windowSize=200,stepSize=1),windowTitle='Disparity Image',waitKey=0)
+#Feature Based Method:(Takes a long time to run so I commented it out)
+#featureBasedMethod(leftImage,rightImage,templateSize=3,windowFeatureSize=4)
 
-#Works for SAD:
-#displayImageGivenArray(disparity(leftImage,rightImage,templateSize=3,windowSize=30,stepSize=1,method='sad',useCV2Instead=True),windowTitle='SAD Disparity Image')
+#Gaussian Pyramid Example:
+print("Displaying left inputted image for gaussian:")
+displayImageGivenArray(leftImage,waitKey=1000)
 
-#Works for SSD:
-#displayImageGivenArray(disparity(leftImage,rightImage,templateSize=3,windowSize=100,stepSize=1,method='ssd',useCV2Instead=True),windowTitle='SSD Disparity Image')
-#displayImageGivenArray(disparity(leftImage,rightImage,templateSize=9,windowSize=100,stepSize=1,method='ssd',useCV2Instead=True),windowTitle='SSD Disparity Image') #Looks good
-displayImageGivenArray(disparity(leftImage,rightImage,templateSize=15,windowSize=300,stepSize=1,method='ssd',useCV2Instead=True),windowTitle='SSD Disparity Image')
-
-#Works for NCC: (Takes a while to finish running so I use CV2 instead)
-#displayImageGivenArray(disparity(leftImage,rightImage,templateSize=11,windowSize=100,stepSize=1,method='ncc',useCV2Instead=True),windowTitle='NCC Disparity Image',waitKey=0)
+print("Displaying right inputted image for gaussian:")
+displayImageGivenArray(rightImage,waitKey=1000)
+disparityPyramid(leftImage,rightImage,3,method='ncc')

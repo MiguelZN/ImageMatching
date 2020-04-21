@@ -2,6 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="00f163f9-5d47-4173-b2e5-a0f004b902b2" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/input_images/sawtoothleft.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/input_images/sawtoothright.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/input_images/teddyleft.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/input_images/teddyright.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/input_images/venusleft.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/input_images/venusright.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Main.py" beforeDir="false" afterPath="$PROJECT_DIR$/Main.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -15,8 +22,11 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="353">
-              <caret line="738" lean-forward="true" selection-start-line="738" selection-end-line="738" />
+            <state relative-caret-position="180">
+              <caret line="12" column="137" selection-start-line="12" selection-start-column="137" selection-end-line="12" selection-end-column="137" />
+              <folding>
+                <element signature="e#461#479#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -32,13 +42,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>SSDOther</find>
-      <find>harris</find>
-      <find>getN</find>
-      <find>listOfima</find>
-      <find>listOfIm</find>
-      <find>Let</find>
-      <find>LTE</find>
       <find>NCC</find>
       <find>drawRe</find>
       <find>SAD</find>
@@ -51,10 +54,24 @@
       <find>print(&quot;Start</find>
       <find>where</find>
       <find>zip</find>
-      <find>harriscorner</find>
       <find>2BGR</find>
       <find>BGR</find>
       <find>matchFeatures</find>
+      <find>exit(</find>
+      <find>harriscorner2</find>
+      <find>harriscorner</find>
+      <find>matching</find>
+      <find>match</find>
+      <find>point[</find>
+      <find>minmax</find>
+      <find>features</find>
+      <find>correspondingRight</find>
+      <find>corresponding</find>
+      <find>disparity</find>
+      <find>feature</find>
+      <find>templateSize</find>
+      <find>template</find>
+      <find>letuser</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -68,9 +85,9 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="399" />
-    <option name="y" value="23" />
-    <option name="width" value="1041" />
+    <option name="x" value="727" />
+    <option name="y" value="707" />
+    <option name="width" value="510" />
     <option name="height" value="877" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -86,11 +103,6 @@
               <item name="CISC442PR2" type="b2602c69:ProjectViewProjectNode" />
               <item name="CISC442PR2" type="462c0819:PsiDirectoryNode" />
             </path>
-            <path>
-              <item name="CISC442PR2" type="b2602c69:ProjectViewProjectNode" />
-              <item name="CISC442PR2" type="462c0819:PsiDirectoryNode" />
-              <item name="input_images" type="462c0819:PsiDirectoryNode" />
-            </path>
           </expand>
           <select />
         </subPane>
@@ -102,11 +114,11 @@
     <property name="settings.editor.selected.configurable" value="vcs.CVS" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/input_images" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/input_images" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -157,20 +169,29 @@
     </task>
     <servers />
   </component>
+  <component name="TodoView">
+    <todo-panel id="selected-file">
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+  </component>
   <component name="ToolWindowManager">
-    <frame x="399" y="23" width="1041" height="877" extended-state="0" />
+    <frame x="720" y="23" width="720" height="877" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.17058824" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.17310444" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.40636942" />
+      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.25987262" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.3299363" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Terminal" order="8" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" />
@@ -185,7 +206,7 @@
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3299363" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.25987262" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -204,18 +225,13 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Main.py</url>
-          <line>169</line>
+          <line>162</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/Main.py</url>
-          <line>606</line>
+          <line>679</line>
           <option name="timeStamp" value="17" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/Main.py</url>
-          <line>545</line>
-          <option name="timeStamp" value="18" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
@@ -298,13 +314,43 @@
     <entry file="file://$PROJECT_DIR$/input_images/scene1.row3.col5.jpg">
       <provider selected="true" editor-type-id="images" />
     </entry>
+    <entry file="file://$PROJECT_DIR$/input_images/teddyright.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/input_images/sawtoothleft.jpg">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/input_images/sawtoothright.jpg">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/input_images/conesleft.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/input_images/conesright.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/input_images/scene1.row3.col4.jpg">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/input_images/teddyleft.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/input_images/venusleft.jpg">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/input_images/venusright.jpg">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
     <entry file="file://$PROJECT_DIR$/input_images/scene1.row3.col1.jpg">
       <provider selected="true" editor-type-id="images" />
     </entry>
     <entry file="file://$PROJECT_DIR$/Main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="353">
-          <caret line="738" lean-forward="true" selection-start-line="738" selection-end-line="738" />
+        <state relative-caret-position="180">
+          <caret line="12" column="137" selection-start-line="12" selection-start-column="137" selection-end-line="12" selection-end-column="137" />
+          <folding>
+            <element signature="e#461#479#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
